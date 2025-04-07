@@ -24,6 +24,12 @@ const authReducer = (state = initialState, action: any) => {
       return {
         ...state,
         user: null,
+        error: null,
+      };
+    case AuthActionTypes.LOGIN_ERROR:
+      return {
+        ...state,
+        error: action.payload,
       };
     default:
       return state;

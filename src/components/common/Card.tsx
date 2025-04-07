@@ -1,30 +1,37 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ViewProps } from 'react-native';
+import { colors, shadows } from '../../theme';
 
-interface CardProps {
-  children: React.ReactNode;
-  style?: object;
+interface CardProps extends ViewProps {
+  elevation?: 'small' | 'medium' | 'large' | 'none';
 }
 
-const Card: React.FC<CardProps> = ({ children, style }) => {
-  return <View style={[styles.card, style]}>{children}</View>;
+const Card: React.FC<CardProps> = ({ 
+  children, 
+  style, 
+  elevation = 'small',
+  ...props 
+}) => {
+  const cardShadow = elevation !== 'none' ? shadows[elevation] : {};
+  
+  return (
+    <View 
+      style={[styles.card, cardShadow, style]} 
+      {...props}
+    >
+      {children}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: colors.border
   },
 });
 

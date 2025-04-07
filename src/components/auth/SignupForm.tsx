@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../config/firebase';
 
 const SignupForm = () => {
     const [email, setEmail] = useState('');
@@ -26,14 +27,16 @@ const SignupForm = () => {
 
         setLoading(true);
         try {
-            const auth = getAuth();
             await createUserWithEmailAndPassword(auth, email, password);
             Alert.alert('Success', 'Account created successfully!');
             setEmail('');
             setPassword('');
             setConfirmPassword('');
-        } catch (error) {
-            Alert.alert('Signup Failed', (error as Error).message);
+        } catch (error: any) {
+            const errorMessage = error.code === 'auth/email-already-in-use'
+                ? 'An account with this email already exists'
+                : error.message;
+            Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
         }

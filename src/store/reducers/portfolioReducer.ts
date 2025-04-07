@@ -66,6 +66,13 @@ const portfolioReducer = (state = initialState, action: any) => {
         holdings: newHoldings,
       };
 
+    case StockActionTypes.INITIALIZE_PORTFOLIO:
+      return {
+        ...state,
+        balance: action.payload.balance,
+        holdings: action.payload.holdings || {}
+      };
+
     default:
       return state;
   }

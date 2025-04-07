@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ALPHA_VANTAGE_API_KEY, ALPHA_VANTAGE_BASE_URL } from '../config/constants';
+import { FINNHUB_API_KEY, FINNHUB_BASE_URL, DEFAULT_STOCKS } from '../config/constants';
 
 interface StockData {
   symbol: string;
@@ -9,79 +9,199 @@ interface StockData {
 }
 
 export const fetchStockQuote = async (symbol: string): Promise<StockData> => {
-  console.log(`[API] Fetching stock quote for symbol: ${symbol}`);
   try {
-    const response = await axios.get(ALPHA_VANTAGE_BASE_URL, {
-      params: {
-        function: 'GLOBAL_QUOTE',
-        symbol,
-        apikey: ALPHA_VANTAGE_API_KEY
+    const response = await axios.get(`${FINNHUB_BASE_URL}/quote`, {
+      params: { 
+        symbol, 
+        token: FINNHUB_API_KEY 
       }
     });
-    console.log(`[API] Successfully fetched quote for ${symbol}`);
 
-    const quote = response.data['Global Quote'];
-    const result = {
-      symbol: quote['01. symbol'],
-      price: parseFloat(quote['05. price']),
-      change: parseFloat(quote['09. change']),
-      changePercent: parseFloat(quote['10. change percent'].replace('%', ''))
+    const data = response.data;
+    if (!data || typeof data.c === 'undefined') {
+      throw new Error('Invalid API response');
+    }
+
+    return {
+      symbol,
+      price: Number(data.c) || 0,
+      change: Number(data.d) || 0,
+      changePercent: Number(data.dp) || 0
     };
-    console.log('[API] Processed quote data:', result);
-    return result;
   } catch (error) {
-    console.error(`[API] Error fetching stock quote for ${symbol}:`, error);
+    console.error(`[API] Error fetching quote for ${symbol}:`, error);
     throw error;
   }
 };
 
 export const searchStocks = async (query: string) => {
-  console.log(`[API] Searching stocks with query: ${query}`);
   try {
-    const response = await axios.get(ALPHA_VANTAGE_BASE_URL, {
+    const response = await axios.get(`${FINNHUB_BASE_URL}/search`, {
       params: {
-        function: 'SYMBOL_SEARCH',
-        keywords: query,
-        apikey: ALPHA_VANTAGE_API_KEY
+        q: query,
+        token: FINNHUB_API_KEY
       }
     });
-    console.log(`[API] Successfully completed stock search for "${query}"`);
 
-    const results = response.data.bestMatches.map((match: any) => ({
-      symbol: match['1. symbol'],
-      name: match['2. name'],
-      region: match['4. region'],
-      type: match['3. type']
+    return response.data.result.map((item: any) => ({
+      symbol: item.symbol,
+      name: item.description,
+      type: item.type
     }));
-    console.log('[API] Processed search results:', results);
-    return results;
   } catch (error) {
-    console.error(`[API] Error searching stocks with query "${query}":`, error);
-    throw error;
+    console.error('Error searching stocks:', error);
+    return [];
   }
+};
+
+export const fetchStockCandles = async (symbol: string) => {
+  try {
+    // Check if the API key is valid
+    if (!FINNHUB_API_KEY || FINNHUB_API_KEY.includes('dummy')) {
+      console.warn('Invalid or demo Finnhub API key detected');
+      return generateMockCandleData();
+    }
+    
+    const now = Math.floor(Date.now() / 1000);
+    const oneDayAgo = now - (24 * 60 * 60);
+
+    const response = await axios.get(`${FINNHUB_BASE_URL}/stock/candle`, {
+      params: {
+        symbol,
+        resolution: '30', // 30-minute intervals
+        from: oneDayAgo,
+        to: now,
+        token: FINNHUB_API_KEY
+      }
+    });
+
+    if (!response.data || response.data.s === 'no_data') {
+      console.log(`No candle data available for ${symbol}, using mock data`);
+      return generateMockCandleData();
+    }
+
+    return {
+      timestamps: response.data.t,
+      prices: response.data.c,
+      volumes: response.data.v
+    };
+  } catch (error) {
+    console.error(`[API] Error fetching candles for ${symbol}:`, error);
+    console.log(`Using mock candle data for ${symbol}`);
+    return generateMockCandleData();
+  }
+};
+
+// Generate mock candle data when the API fails
+function generateMockCandleData() {
+  const now = Math.floor(Date.now() / 1000);
+  const timestamps = [];
+  const prices = [];
+  const volumes = [];
+  
+  // Generate 24 hours of 30-minute interval data
+  for (let i = 0; i < 48; i++) {
+    timestamps.push(now - (i * 30 * 60)); // 30 minute intervals
+    // Random price between 90 and 110
+    prices.push(100 + Math.random() * 20 - 10);
+    // Random volume
+    volumes.push(Math.floor(Math.random() * 10000) + 1000);
+  }
+  
+  // Reverse arrays so they're in chronological order
+  return {
+    timestamps: timestamps.reverse(),
+    prices: prices.reverse(),
+    volumes: volumes.reverse()
+  };
+}
+
+// WebSocket connection for real-time updates
+let ws: WebSocket | null = null;
+
+export const startRealtimeUpdates = (symbols: string[], callback: (data: any) => void) => {
+  ws = new WebSocket(`wss://ws.finnhub.io?token=${FINNHUB_API_KEY}`);
+
+  ws.onopen = () => {
+    console.log('Connected to Finnhub WebSocket');
+    symbols.forEach(symbol => {
+      ws?.send(JSON.stringify({ type: 'subscribe', symbol }));
+    });
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'trade') {
+      callback(data);
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+  };
+
+  return () => {
+    if (ws) {
+      symbols.forEach(symbol => {
+        ws?.send(JSON.stringify({ type: 'unsubscribe', symbol }));
+      });
+      ws.close();
+    }
+  };
 };
 
 export const fetchStockIntraday = async (symbol: string) => {
-  console.log(`[API] Fetching intraday data for symbol: ${symbol}`);
   try {
-    const response = await axios.get(ALPHA_VANTAGE_BASE_URL, {
+    // Check if the API key is valid
+    if (!FINNHUB_API_KEY || FINNHUB_API_KEY.includes('dummy')) {
+      console.warn('Invalid or demo Finnhub API key detected');
+      return generateMockIntradayData();
+    }
+    
+    const now = Math.floor(Date.now() / 1000);
+    const start = now - (24 * 60 * 60);
+
+    const response = await axios.get(`${FINNHUB_BASE_URL}/stock/candle`, {
       params: {
-        function: 'TIME_SERIES_INTRADAY',
         symbol,
-        interval: '5min',
-        apikey: ALPHA_VANTAGE_API_KEY
+        resolution: '5',
+        from: start,
+        to: now,
+        token: FINNHUB_API_KEY
       }
     });
-    console.log(`[API] Successfully fetched intraday data for ${symbol}`);
-    
-    const result = response.data['Time Series (5min)'];
-    console.log('[API] Processed intraday data:', { 
-      symbol, 
-      dataPoints: Object.keys(result).length 
-    });
-    return result;
+
+    if (!response.data || response.data.s === 'no_data') {
+      return generateMockIntradayData();
+    }
+
+    return {
+      timestamps: response.data.t || [],
+      prices: response.data.c || [],
+      volumes: response.data.v || []
+    };
   } catch (error) {
     console.error(`[API] Error fetching intraday data for ${symbol}:`, error);
-    throw error;
+    return generateMockIntradayData();
   }
 };
+
+function generateMockIntradayData() {
+  const now = Math.floor(Date.now() / 1000);
+  const timestamps = [];
+  const prices = [];
+  const volumes = [];
+  
+  // Generate 24 hours of 5-minute interval data
+  for (let i = 0; i < 288; i++) {
+    timestamps.push(now - (i * 5 * 60)); // 5 minute intervals
+    prices.push(100 + Math.sin(i/10) * 5 + (Math.random() * 2 - 1));
+    volumes.push(Math.floor(Math.random() * 5000) + 500);
+  }
+  
+  return {
+    timestamps: timestamps.reverse(),
+    prices: prices.reverse(),
+    volumes: volumes.reverse()
+  };
+}

@@ -1,47 +1,52 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import LoginForm from '../components/auth/LoginForm';
 import SignupForm from '../components/auth/SignupForm';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/types';
+import { useNavigation } from '@react-navigation/native';
 
 const AuthScreen = () => {
     const [isLogin, setIsLogin] = useState(true);
+    const user = useSelector((state: RootState) => state.auth.user);
+    const navigation = useNavigation();
+    
+    // If user is already logged in, redirect to home
+    useEffect(() => {
+        if (user) {
+            navigation.navigate('Home');
+        }
+    }, [user, navigation]);
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.formContainer}>
                 {isLogin ? <LoginForm /> : <SignupForm />}
-                <TouchableOpacity 
+                
+                <TouchableOpacity
                     style={styles.switchButton}
                     onPress={() => setIsLogin(!isLogin)}
                 >
                     <Text style={styles.switchText}>
-                        {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+                        {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
                     </Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
         backgroundColor: '#f5f5f5',
     },
     formContainer: {
-        backgroundColor: 'white',
-        marginHorizontal: 20,
-        padding: 20,
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 24,
+        backgroundColor: '#f5f5f5',
     },
     switchButton: {
         marginTop: 20,

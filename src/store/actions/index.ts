@@ -1,71 +1,55 @@
-import { Dispatch } from 'redux';
+import { AnyAction } from 'redux'; // Import AnyAction
 import { AuthActionTypes, StockActionTypes } from '../types';
 
-// Define action interfaces
-interface LoginAction {
-    type: AuthActionTypes.LOGIN;
-    payload: any;
-}
-
-interface LogoutAction {
-    type: AuthActionTypes.LOGOUT;
-}
-
-interface BuyStockAction {
-    type: StockActionTypes.BUY_STOCK;
-    payload: {
-        stockId: string;
-        quantity: number;
-        price: number;
-    };
-}
-
-interface SellStockAction {
-    type: StockActionTypes.SELL_STOCK;
-    payload: {
-        stockId: string;
-        quantity: number;
-        price: number;
-    };
-}
-
-export type StockActions = BuyStockAction | SellStockAction;
-export type AuthActions = LoginAction | LogoutAction;
-export type AppActions = StockActions | AuthActions;
-
 // Action creators for authentication
-export const loginUser = (userData: any): AppActions => ({
-    type: AuthActionTypes.LOGIN,
-    payload: userData,
+export const loginUser = (userData: any): AnyAction => ({
+  type: AuthActionTypes.LOGIN,
+  payload: userData,
 });
 
-export const logoutUser = (): AppActions => ({
-    type: AuthActionTypes.LOGOUT,
+export const logoutUser = (): AnyAction => ({
+  type: AuthActionTypes.LOGOUT,
+});
+
+export const loginError = (error: string): AnyAction => ({
+  type: AuthActionTypes.LOGIN_ERROR,
+  payload: error,
 });
 
 // Action creators for stock transactions
 export const buyStock = (
-    stockId: string,
-    quantity: number,
-    price: number
-): AppActions => ({
-    type: StockActionTypes.BUY_STOCK,
-    payload: {
-        stockId,
-        quantity,
-        price,
-    },
+  stockId: string,
+  quantity: number,
+  price: number
+): AnyAction => ({
+  type: StockActionTypes.BUY_STOCK,
+  payload: {
+    stockId,
+    quantity,
+    price,
+  },
 });
 
 export const sellStock = (
-    stockId: string,
-    quantity: number,
-    price: number
-): AppActions => ({
-    type: StockActionTypes.SELL_STOCK,
-    payload: {
-        stockId,
-        quantity,
-        price,
-    },
+  stockId: string,
+  quantity: number,
+  price: number
+): AnyAction => ({
+  type: StockActionTypes.SELL_STOCK,
+  payload: {
+    stockId,
+    quantity,
+    price,
+  },
+});
+
+export const updatePrice = (
+  stockId: string,
+  price: number
+): AnyAction => ({
+  type: StockActionTypes.UPDATE_PRICE,
+  payload: {
+    stockId,
+    price,
+  },
 });

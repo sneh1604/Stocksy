@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
+import { ThunkDispatch } from '@reduxjs/toolkit';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { loginUser } from '../../store/actions';
+import { RootState } from '../../store/types';
+import { AnyAction } from 'redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<ThunkDispatch<RootState, unknown, AnyAction>>();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -20,18 +24,24 @@ const LoginForm = () => {
         setLoading(true);
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            // Store auth data in AsyncStorage
+            await AsyncStorage.setItem('user', JSON.stringify({
+                uid: userCredential.user.uid,
+                email: userCredential.user.email,
+                displayName: userCredential.user.displayName
+            }));
+            
             dispatch(loginUser({
                 uid: userCredential.user.uid,
-                email: userCredential.user.email
+                email: userCredential.user.email,
+                displayName: userCredential.user.displayName
             }));
             setEmail('');
             setPassword('');
         } catch (error: any) {
             const errorMessage = error.code === 'auth/user-not-found' 
                 ? 'No account found with this email' 
-                : error.code === 'auth/wrong-password'
-                ? 'Invalid password'
-                : 'Login failed. Please try again.';
+                : error.message;
             Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
