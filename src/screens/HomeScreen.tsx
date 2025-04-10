@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, FlatList, Ale
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSelector, useDispatch } from 'react-redux';
-import StockList from '../components/stocks/StockList';
 import Portfolio from '../components/stocks/Portfolio';
 import { RootState } from '../store/types';
 import { logoutUser } from '../store/actions';
@@ -137,31 +136,50 @@ const HomeScreen = () => {
         );
     }
 
-    // Use a stacked approach instead of ScrollView to avoid nesting VirtualizedLists
+    // Use FlatList as container for the portfolio section
     return (
-        <View style={styles.container}>
-            {user && (
-                <View style={styles.welcomeContainer}>
-                    <Text style={styles.welcomeText}>
-                        Welcome, {user?.displayName || user?.email?.split('@')[0] || 'Trader'}
-                    </Text>
-                    <TouchableOpacity 
-                        style={styles.historyButton}
-                        onPress={() => navigation.navigate('TransactionHistory')}
-                    >
-                        <Ionicons name="time-outline" size={16} color={colors.primary} />
-                        <Text style={styles.historyButtonText}>History</Text>
-                    </TouchableOpacity>
-                </View>
+        <FlatList
+            style={styles.container}
+            data={[]} // Empty data array since we're using header component
+            keyExtractor={() => 'portfolio'}
+            renderItem={null}
+            ListHeaderComponent={() => (
+                <>
+                    {user && (
+                        <View style={styles.welcomeContainer}>
+                            <Text style={styles.welcomeText}>
+                                Welcome, {user?.displayName || user?.email?.split('@')[0] || 'Trader'}
+                            </Text>
+                            <View style={styles.actionButtons}>
+                                <TouchableOpacity 
+                                    style={styles.actionButton}
+                                    onPress={() => navigation.navigate('TransactionHistory')}
+                                >
+                                    <Ionicons name="time-outline" size={16} color={colors.primary} />
+                                    <Text style={styles.actionButtonText}>History</Text>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity 
+                                    style={styles.actionButton}
+                                    onPress={() => navigation.navigate('SearchStock')}
+                                >
+                                    <Ionicons name="search" size={16} color={colors.primary} />
+                                    <Text style={styles.actionButtonText}>Find Stocks</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                    <Portfolio />
+                </>
             )}
-            <View style={styles.portfolioSection}>
-                <Portfolio />
-            </View>
-            <View style={styles.marketSection}>
-                <Text style={styles.sectionTitle}>Market Watch</Text>
-                <StockList />
-            </View>
-        </View>
+            refreshControl={
+                <RefreshControl 
+                    refreshing={refreshing} 
+                    onRefresh={onRefresh} 
+                    colors={[colors.primary]}
+                />
+            }
+        />
     );
 };
 
@@ -189,14 +207,18 @@ const styles = StyleSheet.create({
         fontWeight: typography.fontWeights.medium as "500",
         color: colors.dark,
     },
-    historyButton: {
+    actionButtons: {
+        flexDirection: 'row',
+    },
+    actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: spacing.small,
         borderRadius: 16,
         backgroundColor: 'rgba(0, 102, 204, 0.1)',
+        marginLeft: spacing.small,
     },
-    historyButtonText: {
+    actionButtonText: {
         fontSize: typography.fontSizes.small,
         fontWeight: typography.fontWeights.medium as "500",
         color: colors.primary,
@@ -208,20 +230,6 @@ const styles = StyleSheet.create({
     },
     headerButton: {
         marginHorizontal: spacing.small,
-    },
-    portfolioSection: {
-        flex: 1,
-    },
-    marketSection: {
-        flex: 1,
-        marginTop: 10,
-        padding: spacing.base,
-    },
-    sectionTitle: {
-        fontSize: typography.fontSizes.large,
-        fontWeight: 'bold',
-        marginBottom: spacing.small,
-        color: colors.dark,
     },
     authPrompt: {
         flex: 1,

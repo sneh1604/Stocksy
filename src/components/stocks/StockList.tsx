@@ -18,7 +18,11 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'StockDetail
 
 const defaultSymbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'META'];
 
-const StockList = () => {
+interface StockListProps {
+  onStockPress?: (symbol: string, price: number) => void;
+}
+
+const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
   const navigation = useNavigation<NavigationProp>();
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,10 +78,14 @@ const StockList = () => {
   };
 
   const handleStockPress = (symbol: string, price: number) => {
-    navigation.navigate('StockDetails', { 
-      symbol,
-      initialPrice: price 
-    });
+    if (onStockPress) {
+      onStockPress(symbol, price);
+    } else {
+      navigation.navigate('StockDetails', { 
+        symbol,
+        initialPrice: price 
+      });
+    }
   };
 
   // Implement real-time price updates

@@ -111,7 +111,7 @@ const AppNavigator = () => {
           name="Auth" 
           component={AuthScreen}
           options={{
-            headerShown: true,
+            headerShown: false,
             title: 'Login / Sign Up',
             // This will prevent going back to the home screen
             headerBackVisible: false
