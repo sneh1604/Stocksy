@@ -1,207 +1,175 @@
-import axios from 'axios';
-import { FINNHUB_API_KEY, FINNHUB_BASE_URL, DEFAULT_STOCKS } from '../config/constants';
+import { DEFAULT_STOCKS, FINNHUB_API_KEY, FINNHUB_FALLBACK_API_KEY } from '../config/constants';
+import { usdToInr } from '../utils/currencyConverter';
 
-interface StockData {
-  symbol: string;
-  price: number;
-  change: number;
-  changePercent: number;
-}
+// Use the primary API key or fall back to the secondary one
+const API_KEY = FINNHUB_API_KEY || FINNHUB_FALLBACK_API_KEY;
 
-export const fetchStockQuote = async (symbol: string): Promise<StockData> => {
+/**
+ * Fetches quote data for a specific stock symbol
+ * @param symbol The stock symbol to fetch data for
+ * @returns Quote data including price, change, and percentage change
+ */
+export const fetchStockQuote = async (symbol: string) => {
   try {
-    const response = await axios.get(`${FINNHUB_BASE_URL}/quote`, {
-      params: { 
-        symbol, 
-        token: FINNHUB_API_KEY 
-      }
-    });
-
-    const data = response.data;
-    if (!data || typeof data.c === 'undefined') {
-      throw new Error('Invalid API response');
+    const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`);
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
     }
-
+    
     return {
       symbol,
-      price: Number(data.c) || 0,
-      change: Number(data.d) || 0,
-      changePercent: Number(data.dp) || 0
+      price: data.c || 0, // Current price
+      change: data.d || 0, // Change
+      changePercent: data.dp || 0 // Change percent
     };
   } catch (error) {
-    console.error(`[API] Error fetching quote for ${symbol}:`, error);
+    console.error('Error fetching stock quote:', error);
     throw error;
   }
 };
 
+/**
+ * Fetches candle (OHLC) data for a specific stock symbol
+ * @param symbol The stock symbol to fetch data for
+ * @param resolution The data resolution (1, 5, 15, 30, 60, D, W, M)
+ * @param from Unix timestamp for start date
+ * @param to Unix timestamp for end date
+ * @returns Candle data including prices and timestamps
+ */
+export const fetchStockCandles = async (
+  symbol: string, 
+  resolution = '5', 
+  from = Math.floor((Date.now() - 86400000) / 1000), // 24 hours ago
+  to = Math.floor(Date.now() / 1000) // now
+) => {
+  try {
+    const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}&token=${API_KEY}`);
+    const data = await response.json();
+    
+    if (data.error || data.s === 'no_data') {
+      throw new Error(data.error || 'No candle data available');
+    }
+    
+    return {
+      prices: data.c, // Closing prices
+      timestamps: data.t, // Timestamps
+      volumes: data.v // Volumes
+    };
+  } catch (error) {
+    console.error('Error fetching stock candles:', error);
+    throw error;
+  }
+};
+
+/**
+ * Searches for stocks that match the query
+ * @param query The search query string
+ * @returns Array of matching stocks
+ */
 export const searchStocks = async (query: string) => {
   try {
-    const response = await axios.get(`${FINNHUB_BASE_URL}/search`, {
-      params: {
-        q: query,
-        token: FINNHUB_API_KEY
-      }
-    });
-
-    return response.data.result.map((item: any) => ({
-      symbol: item.symbol,
-      name: item.description,
-      type: item.type
-    }));
+    const response = await fetch(`https://finnhub.io/api/v1/search?q=${query}&token=${API_KEY}`);
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
+    return data.result || [];
   } catch (error) {
     console.error('Error searching stocks:', error);
-    return [];
+    throw error;
   }
 };
 
-export const fetchStockCandles = async (symbol: string) => {
+/**
+ * Fetches market overview data including key indices
+ * @returns Market data for major indices
+ */
+export const fetchMarketOverview = async () => {
   try {
-    // Check if the API key is valid
-    if (!FINNHUB_API_KEY || FINNHUB_API_KEY.includes('dummy')) {
-      console.warn('Invalid or demo Finnhub API key detected');
-      return generateMockCandleData();
-    }
+    // In a real app, we would fetch this from an API
+    // For now, generate simulated market data
     
-    const now = Math.floor(Date.now() / 1000);
-    const oneDayAgo = now - (24 * 60 * 60);
-
-    const response = await axios.get(`${FINNHUB_BASE_URL}/stock/candle`, {
-      params: {
-        symbol,
-        resolution: '30', // 30-minute intervals
-        from: oneDayAgo,
-        to: now,
-        token: FINNHUB_API_KEY
-      }
-    });
-
-    if (!response.data || response.data.s === 'no_data') {
-      console.log(`No candle data available for ${symbol}, using mock data`);
-      return generateMockCandleData();
-    }
-
+    // Generate realistic but random data
+    const generateMarketData = (baseValue: number, volatility: number) => {
+      const change = (Math.random() * 2 - 1) * volatility;
+      const value = baseValue + change;
+      const changePercent = (change / baseValue) * 100;
+      
+      return {
+        value: parseFloat(value.toFixed(2)),
+        change: parseFloat(change.toFixed(2)),
+        changePercent: parseFloat(changePercent.toFixed(2))
+      };
+    };
+    
     return {
-      timestamps: response.data.t,
-      prices: response.data.c,
-      volumes: response.data.v
+      sensex: generateMarketData(72848.5, 400), // Sensex base value with realistic volatility
+      nifty: generateMarketData(22055.6, 120)   // Nifty base value with realistic volatility
     };
   } catch (error) {
-    console.error(`[API] Error fetching candles for ${symbol}:`, error);
-    console.log(`Using mock candle data for ${symbol}`);
-    return generateMockCandleData();
-  }
-};
-
-// Generate mock candle data when the API fails
-function generateMockCandleData() {
-  const now = Math.floor(Date.now() / 1000);
-  const timestamps = [];
-  const prices = [];
-  const volumes = [];
-  
-  // Generate 24 hours of 30-minute interval data
-  for (let i = 0; i < 48; i++) {
-    timestamps.push(now - (i * 30 * 60)); // 30 minute intervals
-    // Random price between 90 and 110
-    prices.push(100 + Math.random() * 20 - 10);
-    // Random volume
-    volumes.push(Math.floor(Math.random() * 10000) + 1000);
-  }
-  
-  // Reverse arrays so they're in chronological order
-  return {
-    timestamps: timestamps.reverse(),
-    prices: prices.reverse(),
-    volumes: volumes.reverse()
-  };
-}
-
-// WebSocket connection for real-time updates
-let ws: WebSocket | null = null;
-
-export const startRealtimeUpdates = (symbols: string[], callback: (data: any) => void) => {
-  ws = new WebSocket(`wss://ws.finnhub.io?token=${FINNHUB_API_KEY}`);
-
-  ws.onopen = () => {
-    console.log('Connected to Finnhub WebSocket');
-    symbols.forEach(symbol => {
-      ws?.send(JSON.stringify({ type: 'subscribe', symbol }));
-    });
-  };
-
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'trade') {
-      callback(data);
-    }
-  };
-
-  ws.onerror = (error) => {
-    console.error('WebSocket error:', error);
-  };
-
-  return () => {
-    if (ws) {
-      symbols.forEach(symbol => {
-        ws?.send(JSON.stringify({ type: 'unsubscribe', symbol }));
-      });
-      ws.close();
-    }
-  };
-};
-
-export const fetchStockIntraday = async (symbol: string) => {
-  try {
-    // Check if the API key is valid
-    if (!FINNHUB_API_KEY || FINNHUB_API_KEY.includes('dummy')) {
-      console.warn('Invalid or demo Finnhub API key detected');
-      return generateMockIntradayData();
-    }
+    console.error('Error fetching market overview:', error);
     
-    const now = Math.floor(Date.now() / 1000);
-    const start = now - (24 * 60 * 60);
-
-    const response = await axios.get(`${FINNHUB_BASE_URL}/stock/candle`, {
-      params: {
-        symbol,
-        resolution: '5',
-        from: start,
-        to: now,
-        token: FINNHUB_API_KEY
-      }
-    });
-
-    if (!response.data || response.data.s === 'no_data') {
-      return generateMockIntradayData();
-    }
-
+    // Provide fallback data even on error
     return {
-      timestamps: response.data.t || [],
-      prices: response.data.c || [],
-      volumes: response.data.v || []
+      sensex: { value: 72848.5, change: 0, changePercent: 0 },
+      nifty: { value: 22055.6, change: 0, changePercent: 0 }
     };
-  } catch (error) {
-    console.error(`[API] Error fetching intraday data for ${symbol}:`, error);
-    return generateMockIntradayData();
   }
 };
 
-function generateMockIntradayData() {
-  const now = Math.floor(Date.now() / 1000);
-  const timestamps = [];
-  const prices = [];
-  const volumes = [];
-  
-  // Generate 24 hours of 5-minute interval data
-  for (let i = 0; i < 288; i++) {
-    timestamps.push(now - (i * 5 * 60)); // 5 minute intervals
-    prices.push(100 + Math.sin(i/10) * 5 + (Math.random() * 2 - 1));
-    volumes.push(Math.floor(Math.random() * 5000) + 500);
+/**
+ * Fetches default stock data for the main watchlist
+ * @returns Array of stock data for default stocks
+ */
+export const fetchDefaultStocks = async () => {
+  try {
+    const stocksData = await Promise.all(
+      DEFAULT_STOCKS.map(async (symbol) => {
+        try {
+          const quote = await fetchStockQuote(symbol);
+          return {
+            symbol,
+            price: usdToInr(quote.price), // Convert price to INR
+            change: quote.change,
+            changePercent: quote.changePercent,
+            name: getCompanyName(symbol), // Add company name for better UI
+            currency: 'INR'
+          };
+        } catch (error) {
+          console.error(`Error fetching data for ${symbol}:`, error);
+          return null;
+        }
+      })
+    );
+    
+    return stocksData.filter(Boolean); // Filter out any null values
+  } catch (error) {
+    console.error('Error fetching default stocks:', error);
+    throw error;
   }
-  
-  return {
-    timestamps: timestamps.reverse(),
-    prices: prices.reverse(),
-    volumes: volumes.reverse()
+};
+
+/**
+ * Get a stock's company name based on symbol
+ * In a real app, this would come from an API
+ */
+const getCompanyName = (symbol: string): string => {
+  const companies: Record<string, string> = {
+    'AAPL': 'Apple Inc.',
+    'GOOGL': 'Alphabet Inc.',
+    'MSFT': 'Microsoft Corp.',
+    'AMZN': 'Amazon.com Inc.',
+    'META': 'Meta Platforms Inc.',
+    'TSLA': 'Tesla Inc.',
+    'NVDA': 'NVIDIA Corp.',
+    'JPM': 'JPMorgan Chase',
+    'V': 'Visa Inc.',
+    'WMT': 'Walmart Inc.'
   };
-}
+  
+  return companies[symbol] || symbol;
+};

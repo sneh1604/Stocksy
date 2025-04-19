@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { fetchStockQuote, searchStocks, startRealtimeUpdates } from '../../api/stocksApi';
+import { fetchStockQuote, searchStocks, fetchDefaultStocks } from '../../api/stocksApi';
 import StockCard from './StockCard';
 import Loading from '../common/Loading';
 import { RootStackParamList } from '../../navigation/types';
@@ -12,6 +12,7 @@ interface StockData {
   price: number;
   change: number;
   changePercent: number;
+  name?: string;
 }
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'StockDetails'>;
@@ -28,6 +29,7 @@ const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Load default stocks on component mount
   useEffect(() => {
     loadDefaultStocks();
   }, []);
@@ -35,18 +37,9 @@ const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
   const loadDefaultStocks = async () => {
     try {
       setLoading(true);
-      const stockData = await Promise.all(
-        defaultSymbols.map(async (symbol) => {
-          try {
-            const data = await fetchStockQuote(symbol);
-            return data;
-          } catch (error) {
-            console.error(`Error fetching quote for ${symbol}:`, error);
-            return null;
-          }
-        })
-      );
-      setStocks(stockData.filter(Boolean) as StockData[]);
+      // Use the fetchDefaultStocks function from stocksApi
+      const stocksData = await fetchDefaultStocks();
+      setStocks(stocksData as StockData[]);
     } catch (error) {
       console.error('Error loading stocks:', error);
     } finally {
@@ -62,9 +55,22 @@ const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
         // Check if results exist and is an array
         if (results && Array.isArray(results)) {
           const stockData = await Promise.all(
-            results.slice(0, 5).map((result: { symbol: string; }) => fetchStockQuote(result.symbol))
+            results.slice(0, 5).map(async (result: { symbol: string; }) => {
+              try {
+                const quote = await fetchStockQuote(result.symbol);
+                return {
+                  symbol: result.symbol,
+                  price: quote.price,
+                  change: quote.change,
+                  changePercent: quote.changePercent
+                };
+              } catch (error) {
+                console.error(`Error fetching quote for ${result.symbol}:`, error);
+                return null;
+              }
+            })
           );
-          setStocks(stockData.filter(Boolean)); // Filter out any null/undefined values
+          setStocks(stockData.filter(Boolean) as StockData[]); // Filter out any null/undefined values
         } else {
           setStocks([]); // Set empty array if no results
         }
@@ -88,29 +94,33 @@ const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
     }
   };
 
-  // Implement real-time price updates
+  // Implement a simple periodic refresh (every 30 seconds)
   useEffect(() => {
     if (stocks.length > 0) {
-      const symbols = stocks.map(stock => stock.symbol);
-      const cleanup = startRealtimeUpdates(symbols, (data) => {
-        if (data.data) {
-          const trade = data.data[0];
-          setStocks(prevStocks => 
-            prevStocks.map(stock => 
-              stock.symbol === data.symbol
-                ? {
-                    ...stock,
-                    price: trade.p,
-                    change: trade.p - stock.price,
-                    changePercent: ((trade.p - stock.price) / stock.price) * 100
-                  }
-                : stock
-            )
+      const intervalId = setInterval(async () => {
+        try {
+          const updatedStocks = await Promise.all(
+            stocks.map(async (stock) => {
+              try {
+                const quote = await fetchStockQuote(stock.symbol);
+                return {
+                  ...stock,
+                  price: quote.price || stock.price,
+                  change: quote.change || stock.change,
+                  changePercent: quote.changePercent || stock.changePercent
+                };
+              } catch {
+                return stock; // Keep existing data if fetch fails
+              }
+            })
           );
+          setStocks(updatedStocks);
+        } catch (error) {
+          console.error('Error updating stock prices:', error);
         }
-      });
-
-      return cleanup;
+      }, 30000); // Update every 30 seconds
+      
+      return () => clearInterval(intervalId);
     }
   }, [stocks.map(s => s.symbol).join(',')]);
 
@@ -133,6 +143,7 @@ const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
           <StockCard 
             stock={item} 
             onPress={() => handleStockPress(item.symbol, item.price)}
+            key={item.symbol} // Add a key prop here for additional safety
           />
         )}
       />

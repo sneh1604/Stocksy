@@ -9,6 +9,7 @@ import StockList from '../components/stocks/StockList';
 import { useDebounce } from '../hooks/useDebounce';
 import { colors, typography, spacing } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
+import { usdToInr } from '../utils/currencyConverter';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'StockDetails'>;
 
@@ -34,14 +35,18 @@ export const SearchStockScreen = () => {
         console.log(`[Search] Searching for stocks with query: ${debouncedQuery}`);
         const results = await searchStocks(debouncedQuery);
         
-        if (results.length > 0) {
+        if (results && Array.isArray(results) && results.length > 0) {
           console.log(`[Search] Found ${results.length} stocks`);
+          
           interface StockResult {
             symbol: string;
-            name: string;
+            description: string;
+            displaySymbol: string;
+            type: string;
           }
 
           interface StockQuote {
+            symbol: string;
             price: number;
             change: number;
             changePercent: number;
@@ -49,13 +54,16 @@ export const SearchStockScreen = () => {
 
           type StockWithQuote = StockResult & StockQuote;
 
-          const stocksWithQuotes: (StockWithQuote | null)[] = await Promise.all(
+          const stocksWithQuotes = await Promise.all(
             results.slice(0, 5).map(async (stock: StockResult) => {
               try {
-                const quote: StockQuote = await fetchStockQuote(stock.symbol);
+                const quote = await fetchStockQuote(stock.symbol);
                 return {
                   ...stock,
-                  ...quote
+                  price: usdToInr(quote.price), // Convert to INR
+                  change: quote.change,
+                  changePercent: quote.changePercent,
+                  name: stock.description
                 };
               } catch (error) {
                 console.error(`[Search] Error fetching quote for ${stock.symbol}:`, error);

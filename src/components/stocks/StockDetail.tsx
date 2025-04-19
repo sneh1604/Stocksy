@@ -6,13 +6,14 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { RootState } from '../../store/reducers';
 import { buyStock, sellStock } from '../../store/actions/index';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, formatIndianNumber } from '../../utils/helpers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { saveTransaction } from '../../services/firestore';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { usdToInr } from '../../utils/currencyConverter';
 
 interface StockDetailProps {
   symbol: string;
@@ -21,8 +22,16 @@ interface StockDetailProps {
 }
 
 interface StockDetailState {
-  stockData: any | null;
-  candleData: any;
+  stockData: {
+    symbol: string;
+    price: number;
+    change: number;
+    changePercent: number;
+  } | null;
+  candleData: {
+    prices: number[];
+    timestamps: number[];
+  } | null;
   loading: boolean;
   quantity: string;
   error: string | null;
@@ -32,7 +41,7 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
   const [state, setState] = useState<StockDetailState>({
     stockData: initialPrice ? {
       symbol,
-      price: initialPrice,
+      price: usdToInr(initialPrice), // Convert immediately to INR if initial price provided
       change: 0,
       changePercent: 0
     } : null,
@@ -50,17 +59,30 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
 
   useEffect(() => {
     let mounted = true;
-    let interval: NodeJS.Timeout;
+    let interval: NodeJS.Timeout | null = null;
 
     const loadData = async () => {
       try {
         setState(prev => ({ ...prev, loading: true }));
         
         const quote = await fetchStockQuote(symbol);
-        let candles = null;
         
+        // Convert USD price to INR for display consistency
+        if (quote) {
+          quote.price = usdToInr(quote.price);
+          // Keep percentage changes accurate
+          if (quote.change && quote.price) {
+            quote.changePercent = ((quote.change / (quote.price - quote.change)) * 100);
+          }
+        }
+        
+        let candles = null;
         try {
           candles = await fetchStockCandles(symbol);
+          // Convert candle prices to INR
+          if (candles && candles.prices) {
+            candles.prices = candles.prices.map((price: number) => usdToInr(price));
+          }
         } catch (error) {
           console.log('Candle data not available, continuing without it');
         }
@@ -68,7 +90,12 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
         if (mounted) {
           setState(prev => ({
             ...prev,
-            stockData: quote,
+            stockData: quote ? {
+              symbol,
+              price: quote.price || 0,
+              change: quote.change || 0,
+              changePercent: quote.changePercent || 0
+            } : null,
             candleData: candles,
             loading: false,
             error: null
@@ -92,9 +119,35 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
 
     return () => {
       mounted = false;
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
   }, [symbol]);
+
+  // Validate quantity input to only allow positive integers
+  const validateQuantityInput = (text: string) => {
+    if (/^\d*$/.test(text)) {
+      setState(prev => ({ ...prev, quantity: text }));
+    }
+  };
+  
+  // Calculate profit/loss for current holding
+  const calculateProfitLoss = () => {
+    if (!holdings[symbol] || !state.stockData?.price) return { value: 0, percentage: 0 };
+    
+    const avgPrice = holdings[symbol].averagePrice || 0;
+    const shares = holdings[symbol].shares || 0;
+    const currentPrice = state.stockData.price;
+    
+    if (avgPrice === 0) return { value: 0, percentage: 0 };
+    
+    const value = (currentPrice - avgPrice) * shares;
+    const percentage = ((currentPrice / avgPrice - 1) * 100);
+    
+    return {
+      value: parseFloat(value.toFixed(2)),
+      percentage: parseFloat(percentage.toFixed(2))
+    };
+  };
 
   const handleTransaction = async (type: 'buy' | 'sell') => {
     if (!userId) {
@@ -103,15 +156,20 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
         'Please login to trade stocks',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Login', onPress: () => navigation.navigate('Auth') }
+          { text: 'Login', onPress: () => navigation.navigate('Auth' as never) }
         ]
       );
       return;
     }
 
+    if (!state.quantity || state.quantity.trim() === '') {
+      Alert.alert('Invalid Quantity', 'Please enter the number of shares you wish to trade.');
+      return;
+    }
+
     const shares = parseInt(state.quantity);
     if (isNaN(shares) || shares <= 0) {
-      Alert.alert('Invalid Quantity', 'Please enter a valid number of shares');
+      Alert.alert('Invalid Quantity', 'Please enter a valid positive number of shares.');
       return;
     }
 
@@ -125,7 +183,23 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
 
     if (type === 'buy') {
       if (totalCost > balance) {
-        Alert.alert('Insufficient Funds', `You need ${formatCurrency(totalCost)} to complete this purchase but only have ${formatCurrency(balance)} available.`);
+        Alert.alert(
+          'Insufficient Funds',
+          `You need ${formatCurrency(totalCost)} to buy ${shares} shares, but only have ${formatCurrency(balance)} available.`,
+          [
+            { text: 'OK', style: 'default' },
+            { 
+              text: 'Adjust Quantity', 
+              style: 'default',
+              onPress: () => {
+                const maxPossibleShares = Math.floor(balance / currentPrice);
+                if (maxPossibleShares > 0) {
+                  setState(prev => ({ ...prev, quantity: maxPossibleShares.toString() }));
+                }
+              }
+            }
+          ]
+        );
         return;
       }
       
@@ -139,11 +213,9 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
             style: 'default',
             onPress: async () => {
               try {
-                // First update Redux store (this always works even if Firestore fails)
                 dispatch(buyStock(symbol, shares, currentPrice));
                 
                 try {
-                  // Then try to save transaction to Firestore (might fail)
                   await saveTransaction({
                     userId,
                     symbol,
@@ -155,7 +227,6 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
                   });
                 } catch (error) {
                   console.log('Firestore transaction save failed, but Redux store was updated');
-                  // Transaction will be saved locally as fallback
                 }
                 
                 setState(prev => ({ ...prev, quantity: '' }));
@@ -168,11 +239,29 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
           }
         ]
       );
-    } else { // Sell
+    } else {
       const currentHolding = holdings[symbol]?.shares || 0;
       
+      if (currentHolding === 0) {
+        Alert.alert('No Shares to Sell', `You don't own any shares of ${symbol}.`);
+        return;
+      }
+      
       if (currentHolding < shares) {
-        Alert.alert('Insufficient Shares', `You only have ${currentHolding} shares of ${symbol} available to sell`);
+        Alert.alert(
+          'Insufficient Shares', 
+          `You only have ${currentHolding} shares of ${symbol} available to sell.`,
+          [
+            { text: 'OK', style: 'default' },
+            { 
+              text: 'Sell All', 
+              style: 'default',
+              onPress: () => {
+                setState(prev => ({ ...prev, quantity: currentHolding.toString() }));
+              }
+            }
+          ]
+        );
         return;
       }
       
@@ -186,11 +275,9 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
             style: 'default',
             onPress: async () => {
               try {
-                // First update Redux store (this always works even if Firestore fails)
                 dispatch(sellStock(symbol, shares, currentPrice));
                 
                 try {
-                  // Then try to save transaction to Firestore (might fail)
                   await saveTransaction({
                     userId,
                     symbol,
@@ -202,7 +289,6 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
                   });
                 } catch (error) {
                   console.log('Firestore transaction save failed, but Redux store was updated');
-                  // Transaction will be saved locally as fallback
                 }
                 
                 setState(prev => ({ ...prev, quantity: '' }));
@@ -227,12 +313,21 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
       );
     }
 
-    // Format chart data
+    // Format chart data and ensure valid dates
     const data = {
-      labels: state.candleData.timestamps.map((timestamp: number) => {
-        const date = new Date(timestamp * 1000);
-        return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-      }).filter((_: any, i: number) => i % 5 === 0), // Show every 5th label
+      labels: state.candleData.timestamps
+        .filter((timestamp: number) => timestamp && !isNaN(timestamp)) // Filter invalid timestamps
+        .map((timestamp: number) => {
+          try {
+            const date = new Date(timestamp * 1000);
+            if (isNaN(date.getTime())) return ""; // Skip invalid dates
+            return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+          } catch (e) {
+            return ""; // Return empty string for any date errors
+          }
+        })
+        .filter((label: string) => label !== "") // Filter out empty labels
+        .filter((_: any, i: number) => i % 5 === 0), // Show every 5th label for readability
       datasets: [
         {
           data: state.candleData.prices,
@@ -241,6 +336,11 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
         }
       ],
     };
+
+    // Fallback if no valid labels
+    if (data.labels.length === 0) {
+      data.labels = ['0h', '4h', '8h', '12h', '16h', '20h']; // Generic time labels
+    }
 
     const chartConfig = {
       backgroundGradientFrom: '#ffffff',
@@ -267,10 +367,14 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
         chartConfig={chartConfig}
         bezier
         style={styles.chart}
+        withDots={false}
+        withShadow={true}
       />
     );
   };
 
+  const profitLoss = calculateProfitLoss();
+  
   if (state.loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -288,13 +392,20 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
           style={styles.retryButton} 
           onPress={() => {
             setState(prev => ({ ...prev, loading: true, error: null }));
-            // Retry loading data
             fetchStockQuote(symbol)
-              .then(quote => setState(prev => ({ 
-                ...prev, 
-                stockData: quote,
-                loading: false 
-              })))
+              .then(quote => {
+                const inrPrice = usdToInr(quote.price);
+                setState(prev => ({ 
+                  ...prev, 
+                  stockData: {
+                    symbol,
+                    price: inrPrice,
+                    change: quote.change || 0,
+                    changePercent: quote.changePercent || 0
+                  },
+                  loading: false 
+                }));
+              })
               .catch(error => setState(prev => ({ 
                 ...prev, 
                 error: 'Failed to load stock data',
@@ -324,7 +435,7 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
         </Text>
         <Text style={[
           styles.change,
-          state.stockData?.change >= 0 ? styles.positive : styles.negative
+          (state.stockData?.change ?? 0) >= 0 ? styles.positive : styles.negative
         ]}>
           {state.stockData?.change ? (
             `${state.stockData.change >= 0 ? '+' : ''}${state.stockData.change.toFixed(2)} 
@@ -340,23 +451,50 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
 
       <Card style={styles.tradingCard}>
         <Text style={styles.sectionTitle}>Trade {symbol}</Text>
-        <View style={styles.currentInfo}>
-          <Text style={styles.infoText}>Available Cash: {formatCurrency(balance)}</Text>
-          <Text style={styles.infoText}>Current Position: {holdings[symbol]?.shares || 0} shares</Text>
+        <View style={styles.summaryBox}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Cash</Text>
+            <Text style={styles.summaryValue}>{formatIndianNumber(balance)}</Text>
+          </View>
+          
+          <View style={styles.summaryDivider} />
+          
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Position</Text>
+            <Text style={styles.summaryValue}>{holdings[symbol]?.shares || 0} shares</Text>
+          </View>
+          
+          <View style={styles.summaryDivider} />
+          
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Price</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(state.stockData?.price || 0)}</Text>
+          </View>
         </View>
         
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={state.quantity}
-          onChangeText={(text) => setState(prev => ({ ...prev, quantity: text }))}
-          placeholder="Enter number of shares"
-        />
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Number of Shares</Text>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={state.quantity}
+              onChangeText={validateQuantityInput}
+              placeholder="Enter quantity"
+              placeholderTextColor="#999"
+            />
+          </View>
+        </View>
         
-        {state.quantity && !isNaN(parseInt(state.quantity)) && (
-          <Text style={styles.estimatedCost}>
-            Estimated {holdings[symbol]?.shares ? "value" : "cost"}: {formatCurrency(parseInt(state.quantity) * state.stockData.price)}
-          </Text>
+        {state.quantity && !isNaN(parseInt(state.quantity)) && parseInt(state.quantity) > 0 && (
+          <View style={styles.estimateContainer}>
+            <Text style={styles.estimateLabel}>
+              Estimated {holdings[symbol]?.shares ? "Value" : "Cost"}
+            </Text>
+            <Text style={styles.estimateValue}>
+              {formatCurrency(parseInt(state.quantity) * (state.stockData?.price || 0))}
+            </Text>
+          </View>
         )}
         
         <View style={styles.buttonContainer}>
@@ -381,29 +519,46 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
           <Text style={styles.sectionTitle}>Your Position</Text>
           <View style={styles.holdingDetails}>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Shares:</Text>
+              <Text style={styles.holdingLabel}>Shares Owned</Text>
               <Text style={styles.holdingValue}>{holdings[symbol]?.shares}</Text>
             </View>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Average Cost:</Text>
+              <Text style={styles.holdingLabel}>Avg Cost/Share</Text>
               <Text style={styles.holdingValue}>{formatCurrency(holdings[symbol]?.averagePrice || 0)}</Text>
             </View>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Current Value:</Text>
-              <Text style={styles.holdingValue}>{formatCurrency((holdings[symbol]?.shares || 0) * state.stockData.price)}</Text>
+              <Text style={styles.holdingLabel}>Total Investment</Text>
+              <Text style={styles.holdingValue}>{formatCurrency((holdings[symbol]?.shares || 0) * holdings[symbol]?.averagePrice)}</Text>
             </View>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Profit/Loss:</Text>
-              <Text style={[
-                styles.holdingValue,
-                state.stockData.price >= holdings[symbol]?.averagePrice ? styles.profit : styles.loss
+              <Text style={styles.holdingLabel}>Current Value</Text>
+              <Text style={styles.holdingValue}>{formatCurrency((holdings[symbol]?.shares || 0) * (state.stockData?.price || 0))}</Text>
+            </View>
+            <View style={styles.separator} />
+            <View style={styles.profitLossContainer}>
+              <View style={styles.profitLossHeader}>
+                <Text style={styles.profitLossLabel}>Profit/Loss</Text>
+                <Text style={[
+                  styles.profitLossValue,
+                  profitLoss.value >= 0 ? styles.profit : styles.loss
+                ]}>
+                  {profitLoss.value >= 0 ? '+' : ''}{formatCurrency(profitLoss.value)}
+                </Text>
+              </View>
+              <View style={[
+                styles.profitLossBar,
+                profitLoss.value >= 0 ? styles.profitBar : styles.lossBar
               ]}>
-                {formatCurrency((state.stockData.price - holdings[symbol]?.averagePrice) * holdings[symbol]?.shares)}
-              </Text>
+                <Text style={styles.profitLossBarText}>
+                  {profitLoss.value >= 0 ? '+' : ''}{profitLoss.percentage.toFixed(2)}%
+                </Text>
+              </View>
             </View>
           </View>
         </Card>
       )}
+      
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 };
@@ -412,6 +567,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
   },
   loadingContainer: {
     flex: 1,
@@ -500,31 +660,66 @@ const styles = StyleSheet.create({
     margin: 16,
     padding: 16,
   },
-  currentInfo: {
-    marginBottom: 12,
+  summaryBox: {
+    flexDirection: 'row',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
   },
-  infoText: {
-    fontSize: 14,
+  summaryItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryDivider: {
+    width: 1,
+    backgroundColor: '#ddd',
+    marginHorizontal: 8,
+  },
+  summaryLabel: {
+    fontSize: 12,
     color: '#666',
     marginBottom: 4,
   },
-  sectionTitle: {
-    fontSize: 18,
+  summaryValue: {
+    fontSize: 14,
     fontWeight: 'bold',
+  },
+  inputContainer: {
     marginBottom: 12,
   },
-  input: {
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  inputWrapper: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  input: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     fontSize: 16,
   },
-  estimatedCost: {
+  estimateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  estimateLabel: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 12,
+  },
+  estimateValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -575,11 +770,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+  separator: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 12,
+  },
+  profitLossContainer: {
+    marginTop: 8,
+  },
+  profitLossHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  profitLossLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  profitLossValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  profitLossBar: {
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profitBar: {
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+  },
+  lossBar: {
+    backgroundColor: 'rgba(244, 67, 54, 0.2)',
+  },
+  profitLossBarText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
   profit: {
     color: '#4CAF50',
   },
   loss: {
     color: '#F44336',
+  },
+  bottomSpacer: {
+    height: 32,
   }
 });
 
