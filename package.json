@@ -23,6 +23,7 @@
     "axios": "^1.6.7",
     "expo": "^52.0.37",
     "expo-linear-gradient": "~14.0.2",
+    "expo-modules-core": "^1.11.7",
     "expo-splash-screen": "^0.29.24",
     "expo-status-bar": "~2.0.1",
     "firebase": "^11.4.0",
