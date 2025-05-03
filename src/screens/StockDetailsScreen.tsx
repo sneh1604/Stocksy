@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { darkColors } from '../theme/darkTheme';
 import StockDetail from '../components/stocks/StockDetail';
 
 type RootStackParamList = {
@@ -17,9 +18,10 @@ const StockDetailsScreen: React.FC<StockDetailsScreenProps> = ({ route, navigati
   const { symbol } = route.params;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: darkColors.background }]}>
       <StockDetail 
         symbol={symbol} 
+        initialPrice={0} // Add an appropriate initial price value here
         onClose={() => navigation.goBack()}
       />
     </View>
@@ -29,7 +31,6 @@ const StockDetailsScreen: React.FC<StockDetailsScreenProps> = ({ route, navigati
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
 });
 

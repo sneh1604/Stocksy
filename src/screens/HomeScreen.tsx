@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/types';
 import { getFirestoreRules } from '../services/firestore';
 import { colors, typography, spacing } from '../theme';
+import { darkColors } from '../theme/darkTheme';
 
 // Define proper navigation prop type
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -45,7 +46,7 @@ const HomeScreen = () => {
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerTitle: () => (
-                <Text style={styles.headerTitle}>Stock Simulator</Text>
+                <Text style={[styles.headerTitle, { color: darkColors.text }]}>Stock Simulator</Text>
             ),
             headerRight: () => (
                 <View style={styles.headerButtons}>
@@ -53,7 +54,7 @@ const HomeScreen = () => {
                         onPress={() => navigation.navigate('SearchStock')}
                         style={styles.headerButton}
                     >
-                        <Ionicons name="search" size={22} color={colors.primary} />
+                        <Ionicons name="search" size={22} color={darkColors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={handleAuthButton}
@@ -62,13 +63,13 @@ const HomeScreen = () => {
                         <Ionicons 
                             name={user ? "log-out" : "log-in"} 
                             size={22} 
-                            color={colors.primary} 
+                            color={darkColors.primary} 
                         />
                     </TouchableOpacity>
                 </View>
             ),
             headerStyle: {
-                backgroundColor: colors.white,
+                backgroundColor: darkColors.surface,
             },
             headerShadowVisible: false,
         });
@@ -120,17 +121,17 @@ const HomeScreen = () => {
 
     if (!user) {
         return (
-            <View style={styles.authPrompt}>
-                <Ionicons name="bar-chart" size={80} color={colors.primary} style={styles.appIcon} />
-                <Text style={styles.appTitle}>Stock Simulator</Text>
-                <Text style={styles.authText}>
+            <View style={[styles.authPrompt, { backgroundColor: darkColors.background }]}>
+                <Ionicons name="bar-chart" size={80} color={darkColors.primary} style={styles.appIcon} />
+                <Text style={[styles.appTitle, { color: darkColors.text }]}>Stock Simulator</Text>
+                <Text style={[styles.authText, { color: darkColors.textSecondary }]}>
                     Practice investing with virtual money and learn to trade stocks risk-free
                 </Text>
                 <TouchableOpacity
-                    style={styles.authButton}
+                    style={[styles.authButton, { backgroundColor: darkColors.primary }]}
                     onPress={() => navigation.navigate('Auth')}
                 >
-                    <Text style={styles.authButtonText}>Login / Sign Up</Text>
+                    <Text style={[styles.authButtonText, { color: darkColors.text }]}>Login / Sign Up</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -139,32 +140,32 @@ const HomeScreen = () => {
     // Use FlatList as container for the portfolio section
     return (
         <FlatList
-            style={styles.container}
+            style={[styles.container, { backgroundColor: darkColors.background }]}
             data={[]} // Empty data array since we're using header component
             keyExtractor={() => 'portfolio'}
             renderItem={null}
             ListHeaderComponent={() => (
                 <>
                     {user && (
-                        <View style={styles.welcomeContainer}>
-                            <Text style={styles.welcomeText}>
+                        <View style={[styles.welcomeContainer, { backgroundColor: darkColors.surface }]}>
+                            <Text style={[styles.welcomeText, { color: darkColors.text }]}>
                                 Welcome, {user?.displayName || user?.email?.split('@')[0] || 'Trader'}
                             </Text>
                             <View style={styles.actionButtons}>
                                 <TouchableOpacity 
-                                    style={styles.actionButton}
+                                    style={[styles.actionButton, { backgroundColor: darkColors.surfaceVariant }]}
                                     onPress={() => navigation.navigate('TransactionHistory')}
                                 >
-                                    <Ionicons name="time-outline" size={16} color={colors.primary} />
-                                    <Text style={styles.actionButtonText}>History</Text>
+                                    <Ionicons name="time-outline" size={16} color={darkColors.primary} />
+                                    <Text style={[styles.actionButtonText, { color: darkColors.primary }]}>History</Text>
                                 </TouchableOpacity>
                                 
                                 <TouchableOpacity 
-                                    style={styles.actionButton}
+                                    style={[styles.actionButton, { backgroundColor: darkColors.surfaceVariant }]}
                                     onPress={() => navigation.navigate('SearchStock')}
                                 >
-                                    <Ionicons name="search" size={16} color={colors.primary} />
-                                    <Text style={styles.actionButtonText}>Find Stocks</Text>
+                                    <Ionicons name="search" size={16} color={darkColors.primary} />
+                                    <Text style={[styles.actionButtonText, { color: darkColors.primary }]}>Find Stocks</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
+        padding: 16,
     },
     headerTitle: {
         fontSize: typography.fontSizes.large,

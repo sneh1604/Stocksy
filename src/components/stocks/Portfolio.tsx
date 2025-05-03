@@ -19,6 +19,7 @@ import PortfolioTransactions from './PortfolioTransactions';
 import { getUserTransactions } from '../../services/firestore';
 import TransactionTabs from './TransactionTabs';
 import { usdToInr } from '../../utils/currencyConverter';
+import { darkColors } from '../../theme/darkTheme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'StockDetails'>;
 
@@ -159,7 +160,9 @@ const Portfolio: React.FC = () => {
     const handleHoldingPress = (symbol: string, price: number) => {
         navigation.navigate('StockDetails', {
             symbol,
-            initialPrice: price
+            initialPrice: price,
+            isIndianStock: false,
+            companyName: symbol // Using symbol as fallback for company name
         });
     };
 
@@ -179,19 +182,21 @@ const Portfolio: React.FC = () => {
     
     // Main view
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: darkColors.background }]}>
             <FlatList
                 data={[]}
                 renderItem={null}
                 keyExtractor={() => 'dummy'}
                 ListHeaderComponent={
                     <>
-                        <Card style={styles.summaryCard} elevation="medium">
-                            <Text style={styles.portfolioTitle}>Portfolio Overview</Text>
+                        <Card style={[styles.summaryCard, { backgroundColor: darkColors.surface }]}>
+                            <Text style={[styles.portfolioTitle, { color: darkColors.text }]}>Portfolio Overview</Text>
                             
                             <View style={styles.balanceRow}>
-                                <Text style={styles.totalBalanceLabel}>Total Balance</Text>
-                                <Text style={styles.totalBalanceValue}>{formatIndianNumber(balance + totalValue)}</Text>
+                                <Text style={[styles.totalBalanceLabel, { color: darkColors.textSecondary }]}>Total Balance</Text>
+                                <Text style={[styles.totalBalanceValue, { color: darkColors.text }]}>
+                                    {formatIndianNumber(balance + totalValue)}
+                                </Text>
                                 
                                 <View style={[
                                     styles.changeIndicator,
@@ -211,21 +216,25 @@ const Portfolio: React.FC = () => {
                                 </View>
                             </View>
 
-                            <View style={styles.divider} />
+                            <View style={[styles.divider, { backgroundColor: darkColors.border }]} />
                             
                             <View style={styles.summaryRow}>
                                 <View style={styles.summaryItem}>
-                                    <Text style={styles.summaryLabel}>Cash</Text>
-                                    <Text style={styles.summaryValue}>{formatIndianNumber(balance)}</Text>
+                                    <Text style={[styles.summaryLabel, { color: darkColors.textSecondary }]}>Cash</Text>
+                                    <Text style={[styles.summaryValue, { color: darkColors.text }]}>
+                                        {formatIndianNumber(balance)}
+                                    </Text>
                                 </View>
                                 
                                 <View style={styles.summaryItem}>
-                                    <Text style={styles.summaryLabel}>Investments</Text>
-                                    <Text style={styles.summaryValue}>{formatIndianNumber(totalValue)}</Text>
+                                    <Text style={[styles.summaryLabel, { color: darkColors.textSecondary }]}>Investments</Text>
+                                    <Text style={[styles.summaryValue, { color: darkColors.text }]}>
+                                        {formatIndianNumber(totalValue)}
+                                    </Text>
                                 </View>
                                 
                                 <View style={styles.summaryItem}>
-                                    <Text style={styles.summaryLabel}>Profit/Loss</Text>
+                                    <Text style={[styles.summaryLabel, { color: darkColors.textSecondary }]}>Profit/Loss</Text>
                                     <Text style={[
                                         styles.summaryValue,
                                         { color: totalProfitLoss >= 0 ? colors.profit : colors.loss }
@@ -270,7 +279,7 @@ const Portfolio: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        padding: 16,
     },
     listContent: {
         paddingBottom: spacing.xlarge,
@@ -278,8 +287,8 @@ const styles = StyleSheet.create({
         padding: spacing.base,
     },
     summaryCard: {
-        marginBottom: spacing.medium,
-        padding: spacing.base,
+        marginVertical: 8,
+        padding: 16,
     },
     portfolioTitle: {
         fontSize: typography.fontSizes.large,

@@ -10,6 +10,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { colors, typography, spacing } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { usdToInr } from '../utils/currencyConverter';
+import { darkColors } from '../theme/darkTheme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'StockDetails'>;
 
@@ -90,7 +91,9 @@ export const SearchStockScreen = () => {
   const handleStockPress = (symbol: string, price: number) => {
     navigation.navigate('StockDetails', {
       symbol,
-      initialPrice: price
+      initialPrice: price,
+      isIndianStock: false,
+      companyName: symbol // Using symbol as fallback for company name
     });
   };
 
@@ -169,22 +172,25 @@ export const SearchStockScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchInputContainer}>
-        <Ionicons name="search" size={20} color={colors.gray} style={styles.searchIcon} />
+    <View style={[styles.container, { backgroundColor: darkColors.background }]}>
+      <View style={[styles.searchInputContainer, { 
+        backgroundColor: darkColors.surface,
+        borderColor: darkColors.border 
+      }]}>
+        <Ionicons name="search" size={20} color={darkColors.textSecondary} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: darkColors.text }]}
           placeholder="Search stocks by symbol or name..."
           value={query}
           onChangeText={setQuery}
           autoCapitalize="characters"
-          placeholderTextColor={colors.gray}
+          placeholderTextColor={darkColors.textSecondary}
         />
         {query.length > 0 && (
           <Ionicons 
             name="close-circle" 
             size={20} 
-            color={colors.gray} 
+            color={darkColors.textSecondary} 
             style={styles.clearIcon}
             onPress={() => setQuery('')}
           />
@@ -252,14 +258,14 @@ const styles = StyleSheet.create({
   },
   noResults: {
     fontSize: typography.fontSizes.large,
+    color: darkColors.text,
     fontWeight: typography.fontWeights.medium as '500',
-    color: colors.dark,
     textAlign: 'center',
     marginTop: spacing.medium,
   },
   noResultsSubtext: {
     fontSize: typography.fontSizes.medium,
-    color: colors.gray,
+    color: darkColors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.small,
   },
@@ -273,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold as 'bold',
     marginBottom: spacing.small,
-    color: colors.dark,
+    color: darkColors.text,
   },
   featuredContainer: {
     marginTop: spacing.large,

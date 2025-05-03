@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryText: {
-    color: darkColors.white,
+    color: darkColors.text,
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.medium as '500',
   },

@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { colors, typography, spacing, shadows } from '../../theme';
+import { darkColors } from '../../theme/darkTheme';
 import Card from '../common/Card';
 import { formatCurrency } from '../../utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,7 +30,9 @@ const PortfolioHoldings: React.FC<PortfolioHoldingsProps> = ({ holdings }) => {
   const handleHoldingPress = (symbol: string, price: number) => {
     navigation.navigate('StockDetails', {
       symbol,
-      initialPrice: price
+      initialPrice: price,
+      isIndianStock: false,
+      companyName: symbol // Using symbol as company name fallback
     });
   };
 
@@ -43,7 +46,7 @@ const PortfolioHoldings: React.FC<PortfolioHoldingsProps> = ({ holdings }) => {
         onPress={() => handleHoldingPress(item.symbol, item.currentPrice)}
       >
         <View style={styles.holdingHeader}>
-          <Text style={styles.symbol}>{item.symbol}</Text>
+          <Text style={[styles.symbol, { color: darkColors.text }]}>{item.symbol}</Text>
           <Text style={[
             styles.profitLoss,
             isProfit ? styles.profit : styles.loss
@@ -52,25 +55,25 @@ const PortfolioHoldings: React.FC<PortfolioHoldingsProps> = ({ holdings }) => {
           </Text>
         </View>
         
-        <View style={styles.holdingDetails}>
+        <View style={[styles.holdingDetails, { backgroundColor: darkColors.card }]}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Shares</Text>
-            <Text style={styles.detailValue}>{item.shares}</Text>
+            <Text style={[styles.detailLabel, { color: darkColors.textSecondary }]}>Shares</Text>
+            <Text style={[styles.detailValue, { color: darkColors.text }]}>{item.shares}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Avg Price</Text>
-            <Text style={styles.detailValue}>{formatCurrency(item.averagePrice)}</Text>
+            <Text style={[styles.detailLabel, { color: darkColors.textSecondary }]}>Avg Price</Text>
+            <Text style={[styles.detailValue, { color: darkColors.text }]}>{formatCurrency(item.averagePrice)}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Current</Text>
-            <Text style={styles.detailValue}>{formatCurrency(item.currentPrice)}</Text>
+            <Text style={[styles.detailLabel, { color: darkColors.textSecondary }]}>Current</Text>
+            <Text style={[styles.detailValue, { color: darkColors.text }]}>{formatCurrency(item.currentPrice)}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Value</Text>
-            <Text style={styles.detailValue}>{formatCurrency(item.totalValue)}</Text>
+            <Text style={[styles.detailLabel, { color: darkColors.textSecondary }]}>Value</Text>
+            <Text style={[styles.detailValue, { color: darkColors.text }]}>{formatCurrency(item.totalValue)}</Text>
           </View>
         </View>
         
@@ -95,15 +98,15 @@ const PortfolioHoldings: React.FC<PortfolioHoldingsProps> = ({ holdings }) => {
   
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="briefcase-outline" size={48} color={colors.gray} />
+      <Ionicons name="briefcase-outline" size={48} color={darkColors.textSecondary} />
       <Text style={styles.emptyText}>No stocks in your portfolio</Text>
       <Text style={styles.emptySubtext}>Search for stocks to start investing</Text>
     </View>
   );
   
   return (
-    <Card style={styles.container}>
-      <Text style={styles.title}>Your Holdings</Text>
+    <Card style={[styles.container, { backgroundColor: darkColors.surface }]}>
+      <Text style={[styles.title, { color: darkColors.text }]}>Your Holdings</Text>
       {holdings.length > 0 ? (
         <FlatList
           data={holdings}
@@ -121,42 +124,38 @@ const PortfolioHoldings: React.FC<PortfolioHoldingsProps> = ({ holdings }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: spacing.medium,
+    marginVertical: 16,
   },
   title: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
-    color: colors.dark,
-    marginBottom: spacing.medium,
   },
   holdingItem: {
-    paddingVertical: spacing.small,
+    paddingVertical: 8,
   },
   holdingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.small,
+    marginBottom: 8,
   },
   symbol: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
-    color: colors.dark,
   },
   profitLoss: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
   },
   profit: {
-    color: colors.profit,
+    color: darkColors.profit,
   },
   loss: {
-    color: colors.loss,
+    color: darkColors.loss,
   },
   holdingDetails: {
-    backgroundColor: colors.light,
     borderRadius: 8,
-    padding: spacing.small,
-    marginBottom: spacing.small,
+    padding: 8,
+    marginBottom: 8,
   },
   detailRow: {
     flexDirection: 'row',
@@ -165,24 +164,22 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: typography.fontSizes.small,
-    color: colors.gray,
   },
   detailValue: {
     fontSize: typography.fontSizes.small,
     fontWeight: typography.fontWeights.medium as '500',
-    color: colors.dark,
   },
   performanceBar: {
     height: 28,
     borderRadius: 4,
     justifyContent: 'center',
-    paddingHorizontal: spacing.medium,
+    paddingHorizontal: 16,
   },
   profitBar: {
-    backgroundColor: colors.profit,
+    backgroundColor: darkColors.profit + '20',
   },
   lossBar: {
-    backgroundColor: colors.loss,
+    backgroundColor: darkColors.loss + '20',
   },
   percentView: {
     flexDirection: 'row',
@@ -196,24 +193,24 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.small,
+    backgroundColor: darkColors.border,
+    marginVertical: 8,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xlarge,
+    padding: 32,
   },
   emptyText: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.medium as '500',
-    color: colors.dark,
-    marginTop: spacing.medium,
+    color: darkColors.text,
+    marginTop: 16,
   },
   emptySubtext: {
     fontSize: typography.fontSizes.small,
-    color: colors.gray,
-    marginTop: spacing.small,
+    color: darkColors.textSecondary,
+    marginTop: 8,
   },
 });
 

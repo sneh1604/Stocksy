@@ -14,6 +14,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usdToInr } from '../../utils/currencyConverter';
+import { darkColors } from '../../theme/darkTheme';
 
 interface StockDetailProps {
   symbol: string;
@@ -351,11 +352,11 @@ const StockDetail: React.FC<StockDetailProps> = ({
     }
 
     const chartConfig = {
-      backgroundGradientFrom: '#ffffff',
-      backgroundGradientTo: '#ffffff',
+      backgroundGradientFrom: darkColors.background,
+      backgroundGradientTo: darkColors.background,
       decimalPlaces: 2,
-      color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+      color: (opacity = 1) => `rgba(98, 0, 238, ${opacity})`,
+      labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
       style: {
         borderRadius: 16
       },
@@ -397,7 +398,7 @@ const StockDetail: React.FC<StockDetailProps> = ({
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{state.error}</Text>
         <TouchableOpacity 
-          style={styles.retryButton} 
+          style={[styles.retryButton, { backgroundColor: darkColors.primary }]} 
           onPress={() => {
             setState(prev => ({ ...prev, loading: true, error: null }));
             fetchStockQuote(symbol)
@@ -421,30 +422,31 @@ const StockDetail: React.FC<StockDetailProps> = ({
               })));
           }}
         >
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={[styles.retryButtonText, { color: darkColors.text }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.header}>
+    <ScrollView style={[styles.container, { backgroundColor: darkColors.background }]}>
+      <Card style={[styles.header, { backgroundColor: darkColors.surface }]}>
         <View style={styles.headerContent}>
-          <Text style={styles.symbol}>{symbol}</Text>
-          {companyName && <Text style={styles.companyName}>{companyName}</Text>}
+          <Text style={[styles.symbol, { color: darkColors.onSurface }]}>{symbol}</Text>
+          {companyName && <Text style={[styles.companyName, { color: darkColors.onSurfaceSecondary }]}>{companyName}</Text>}
           {onClose && (
             <TouchableOpacity onPress={onClose}>
-              <Text style={styles.closeButton}>✕</Text>
+              <Text style={[styles.closeButton, { color: darkColors.onSurfaceSecondary }]}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
-        <Text style={styles.price}>
+        <Text style={[styles.price, { color: darkColors.onSurface }]}>
           {state.stockData?.price ? formatCurrency(state.stockData.price) : '-'}
         </Text>
         <Text style={[
           styles.change,
-          (state.stockData?.change ?? 0) >= 0 ? styles.positive : styles.negative
+          (state.stockData?.change ?? 0) >= 0 ? styles.positive : styles.negative,
+          { color: (state.stockData?.change ?? 0) >= 0 ? darkColors.positive : darkColors.negative }
         ]}>
           {state.stockData?.change ? (
             `${state.stockData.change >= 0 ? '+' : ''}${state.stockData.change.toFixed(2)} 
@@ -453,54 +455,54 @@ const StockDetail: React.FC<StockDetailProps> = ({
         </Text>
       </Card>
 
-      <Card style={styles.chartCard}>
-        <Text style={styles.sectionTitle}>Price Chart</Text>
+      <Card style={[styles.chartCard, { backgroundColor: darkColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: darkColors.onSurface }]}>Price Chart</Text>
         {renderChart()}
       </Card>
 
-      <Card style={styles.tradingCard}>
-        <Text style={styles.sectionTitle}>Trade {symbol}</Text>
-        <View style={styles.summaryBox}>
+      <Card style={[styles.tradingCard, { backgroundColor: darkColors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: darkColors.text }]}>Trade {symbol}</Text>
+        <View style={[styles.summaryBox, { backgroundColor: darkColors.surfaceVariant }]}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Cash</Text>
-            <Text style={styles.summaryValue}>{formatIndianNumber(balance)}</Text>
+            <Text style={[styles.summaryLabel, { color: darkColors.onSurfaceSecondary }]}>Cash</Text>
+            <Text style={[styles.summaryValue, { color: darkColors.onSurface }]}>{formatIndianNumber(balance)}</Text>
           </View>
           
           <View style={styles.summaryDivider} />
           
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Position</Text>
-            <Text style={styles.summaryValue}>{holdings[symbol]?.shares || 0} shares</Text>
+            <Text style={[styles.summaryLabel, { color: darkColors.onSurfaceSecondary }]}>Position</Text>
+            <Text style={[styles.summaryValue, { color: darkColors.onSurface }]}>{holdings[symbol]?.shares || 0} shares</Text>
           </View>
           
           <View style={styles.summaryDivider} />
           
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Price</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(state.stockData?.price || 0)}</Text>
+            <Text style={[styles.summaryLabel, { color: darkColors.onSurfaceSecondary }]}>Price</Text>
+            <Text style={[styles.summaryValue, { color: darkColors.onSurface }]}>{formatCurrency(state.stockData?.price || 0)}</Text>
           </View>
         </View>
         
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Number of Shares</Text>
-          <View style={styles.inputWrapper}>
+          <Text style={[styles.inputLabel, { color: darkColors.onSurface }]}>Number of Shares</Text>
+          <View style={[styles.inputWrapper, { borderColor: darkColors.border }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkColors.onSurface }]}
               keyboardType="numeric"
               value={state.quantity}
               onChangeText={validateQuantityInput}
               placeholder="Enter quantity"
-              placeholderTextColor="#999"
+              placeholderTextColor={darkColors.placeholder}
             />
           </View>
         </View>
         
         {state.quantity && !isNaN(parseInt(state.quantity)) && parseInt(state.quantity) > 0 && (
-          <View style={styles.estimateContainer}>
-            <Text style={styles.estimateLabel}>
+          <View style={[styles.estimateContainer, { backgroundColor: darkColors.surfaceVariant }]}>
+            <Text style={[styles.estimateLabel, { color: darkColors.onSurfaceSecondary }]}>
               Estimated {holdings[symbol]?.shares ? "Value" : "Cost"}
             </Text>
-            <Text style={styles.estimateValue}>
+            <Text style={[styles.estimateValue, { color: darkColors.primary }]}>
               {formatCurrency(parseInt(state.quantity) * (state.stockData?.price || 0))}
             </Text>
           </View>
@@ -508,57 +510,69 @@ const StockDetail: React.FC<StockDetailProps> = ({
         
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.button, styles.buyButton]}
+            style={[
+              styles.button, 
+              styles.buyButton,
+              { backgroundColor: darkColors.buyButton }
+            ]}
             onPress={() => handleTransaction('buy')}
           >
-            <Text style={styles.buttonText}>Buy</Text>
+            <Text style={[styles.buttonText, { color: darkColors.text }]}>Buy</Text>
           </TouchableOpacity>
+          
           <TouchableOpacity
-            style={[styles.button, styles.sellButton, (!holdings[symbol]?.shares && styles.disabledButton)]}
+            style={[
+              styles.button, 
+              styles.sellButton,
+              { backgroundColor: darkColors.sellButton },
+              !holdings[symbol]?.shares && { backgroundColor: darkColors.disabledButton }
+            ]}
             onPress={() => handleTransaction('sell')}
             disabled={!holdings[symbol]?.shares}
           >
-            <Text style={styles.buttonText}>Sell</Text>
+            <Text style={[styles.buttonText, { color: darkColors.text }]}>Sell</Text>
           </TouchableOpacity>
         </View>
       </Card>
 
       {holdings[symbol]?.shares > 0 && (
-        <Card style={styles.holdingCard}>
-          <Text style={styles.sectionTitle}>Your Position</Text>
-          <View style={styles.holdingDetails}>
+        <Card style={[styles.holdingCard, { backgroundColor: darkColors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: darkColors.onSurface }]}>Your Position</Text>
+          <View style={[styles.holdingDetails, { backgroundColor: darkColors.surfaceVariant }]}>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Shares Owned</Text>
-              <Text style={styles.holdingValue}>{holdings[symbol]?.shares}</Text>
+              <Text style={[styles.holdingLabel, { color: darkColors.onSurfaceSecondary }]}>Shares Owned</Text>
+              <Text style={[styles.holdingValue, { color: darkColors.onSurface }]}>{holdings[symbol]?.shares}</Text>
             </View>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Avg Cost/Share</Text>
-              <Text style={styles.holdingValue}>{formatCurrency(holdings[symbol]?.averagePrice || 0)}</Text>
+              <Text style={[styles.holdingLabel, { color: darkColors.onSurfaceSecondary }]}>Avg Cost/Share</Text>
+              <Text style={[styles.holdingValue, { color: darkColors.onSurface }]}>{formatCurrency(holdings[symbol]?.averagePrice || 0)}</Text>
             </View>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Total Investment</Text>
-              <Text style={styles.holdingValue}>{formatCurrency((holdings[symbol]?.shares || 0) * holdings[symbol]?.averagePrice)}</Text>
+              <Text style={[styles.holdingLabel, { color: darkColors.onSurfaceSecondary }]}>Total Investment</Text>
+              <Text style={[styles.holdingValue, { color: darkColors.onSurface }]}>{formatCurrency((holdings[symbol]?.shares || 0) * holdings[symbol]?.averagePrice)}</Text>
             </View>
             <View style={styles.holdingRow}>
-              <Text style={styles.holdingLabel}>Current Value</Text>
-              <Text style={styles.holdingValue}>{formatCurrency((holdings[symbol]?.shares || 0) * (state.stockData?.price || 0))}</Text>
+              <Text style={[styles.holdingLabel, { color: darkColors.onSurfaceSecondary }]}>Current Value</Text>
+              <Text style={[styles.holdingValue, { color: darkColors.onSurface }]}>{formatCurrency((holdings[symbol]?.shares || 0) * (state.stockData?.price || 0))}</Text>
             </View>
             <View style={styles.separator} />
             <View style={styles.profitLossContainer}>
               <View style={styles.profitLossHeader}>
-                <Text style={styles.profitLossLabel}>Profit/Loss</Text>
+                <Text style={[styles.profitLossLabel, { color: darkColors.onSurface }]}>Profit/Loss</Text>
                 <Text style={[
                   styles.profitLossValue,
-                  profitLoss.value >= 0 ? styles.profit : styles.loss
+                  profitLoss.value >= 0 ? styles.profit : styles.loss,
+                  { color: profitLoss.value >= 0 ? darkColors.profit : darkColors.loss }
                 ]}>
                   {profitLoss.value >= 0 ? '+' : ''}{formatCurrency(profitLoss.value)}
                 </Text>
               </View>
               <View style={[
                 styles.profitLossBar,
-                profitLoss.value >= 0 ? styles.profitBar : styles.lossBar
+                profitLoss.value >= 0 ? styles.profitBar : styles.lossBar,
+                { backgroundColor: profitLoss.value >= 0 ? darkColors.profitLight : darkColors.lossLight }
               ]}>
-                <Text style={styles.profitLossBarText}>
+                <Text style={[styles.profitLossBarText, { color: darkColors.text }]}>
                   {profitLoss.value >= 0 ? '+' : ''}{profitLoss.percentage.toFixed(2)}%
                 </Text>
               </View>
@@ -575,7 +589,6 @@ const StockDetail: React.FC<StockDetailProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   sectionTitle: {
     fontSize: 18,
@@ -590,7 +603,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: darkColors.text,
   },
   errorContainer: {
     flex: 1,
@@ -599,19 +612,19 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    color: 'red',
+    color: darkColors.error,
     textAlign: 'center',
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: darkColors.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
     fontWeight: 'bold',
+    color: darkColors.text,
   },
   header: {
     margin: 16,
@@ -621,6 +634,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: darkColors.surface,
   },
   symbol: {
     fontSize: 24,
@@ -628,12 +642,10 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 16,
-    color: '#666',
     marginTop: 4,
   },
   closeButton: {
     fontSize: 24,
-    color: '#666',
   },
   price: {
     fontSize: 32,
@@ -645,10 +657,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   positive: {
-    color: '#4CAF50',
+    color: darkColors.positive,
   },
   negative: {
-    color: '#F44336',
+    color: darkColors.negative,
   },
   chartCard: {
     margin: 16,
@@ -662,13 +674,13 @@ const styles = StyleSheet.create({
   chartPlaceholder: {
     height: 200,
     width: '100%',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: darkColors.surfaceVariant,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
   },
   chartPlaceholderText: {
-    color: '#666',
+    color: darkColors.onSurfaceSecondary,
   },
   tradingCard: {
     margin: 16,
@@ -676,7 +688,6 @@ const styles = StyleSheet.create({
   },
   summaryBox: {
     flexDirection: 'row',
-    backgroundColor: '#f9f9f9',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -687,12 +698,11 @@ const styles = StyleSheet.create({
   },
   summaryDivider: {
     width: 1,
-    backgroundColor: '#ddd',
+    backgroundColor: darkColors.border,
     marginHorizontal: 8,
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
   },
   summaryValue: {
@@ -709,7 +719,6 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -722,18 +731,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 12,
-    backgroundColor: '#f9f9f9',
     borderRadius: 8,
     marginBottom: 16,
   },
   estimateLabel: {
     fontSize: 14,
-    color: '#666',
   },
   estimateValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#007AFF',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -747,18 +753,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buyButton: {
-    backgroundColor: '#4CAF50',
     marginRight: 8,
   },
   sellButton: {
-    backgroundColor: '#F44336',
     marginLeft: 8,
   },
   disabledButton: {
-    backgroundColor: '#cccccc',
+    backgroundColor: darkColors.disabledButton,
   },
   buttonText: {
-    color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -767,7 +770,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   holdingDetails: {
-    backgroundColor: '#f9f9f9',
     borderRadius: 8,
     padding: 12,
   },
@@ -778,7 +780,6 @@ const styles = StyleSheet.create({
   },
   holdingLabel: {
     fontSize: 14,
-    color: '#666',
   },
   holdingValue: {
     fontSize: 14,
@@ -786,7 +787,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#ddd',
+    backgroundColor: darkColors.border,
     marginVertical: 12,
   },
   profitLossContainer: {
@@ -813,20 +814,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profitBar: {
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    backgroundColor: darkColors.profitLight,
   },
   lossBar: {
-    backgroundColor: 'rgba(244, 67, 54, 0.2)',
+    backgroundColor: darkColors.lossLight,
   },
   profitLossBarText: {
-    color: '#333',
     fontWeight: 'bold',
   },
   profit: {
-    color: '#4CAF50',
+    color: darkColors.profit,
   },
   loss: {
-    color: '#F44336',
+    color: darkColors.loss,
   },
   bottomSpacer: {
     height: 32,

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { colors, typography } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
+import { darkColors } from '../../theme/darkTheme';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -30,25 +31,29 @@ const Button: React.FC<ButtonProps> = ({
   const getVariantStyles = () => {
     switch(variant) {
       case 'secondary':
-        return styles.secondaryButton;
+        return { backgroundColor: darkColors.surfaceVariant };
       case 'outline':
-        return styles.outlineButton;
+        return { 
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderColor: darkColors.primary 
+        };
       case 'danger':
-        return styles.dangerButton;
+        return { backgroundColor: darkColors.error };
       default:
-        return styles.primaryButton;
+        return { backgroundColor: darkColors.primary };
     }
   };
 
   const getTextStyles = () => {
     switch(variant) {
       case 'outline':
-        return styles.outlineText;
+        return { color: darkColors.primary };
       case 'secondary':
       case 'primary':
       case 'danger':
       default:
-        return styles.buttonText;
+        return { color: darkColors.text };
     }
   };
 
@@ -69,27 +74,31 @@ const Button: React.FC<ButtonProps> = ({
         styles.button,
         getVariantStyles(),
         getSizeStyles(),
-        disabled || loading ? styles.disabledButton : {},
+        disabled || loading ? { backgroundColor: darkColors.disabledButton } : {},
         style
       ]}
       disabled={disabled || loading}
       {...props}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={variant === 'outline' ? colors.primary : colors.white} />
+        <ActivityIndicator 
+          size="small" 
+          color={variant === 'outline' ? darkColors.primary : darkColors.text} 
+        />
       ) : (
         <>
           {iconName && (
             <Ionicons
               name={iconName}
               size={18}
-              color={variant === 'outline' ? colors.primary : colors.white}
+              color={variant === 'outline' ? darkColors.primary : darkColors.text}
               style={styles.icon}
             />
           )}
           <Text style={[
+            styles.buttonText,
             getTextStyles(),
-            disabled ? styles.disabledText : {},
+            disabled ? { color: darkColors.textSecondary } : {},
             size === 'small' ? { fontSize: typography.fontSizes.small } : {}
           ]}>
             {title}
@@ -107,19 +116,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 8,
   },
-  primaryButton: {
-    backgroundColor: colors.primary,
-  },
-  secondaryButton: {
-    backgroundColor: colors.secondary,
-  },
-  dangerButton: {
-    backgroundColor: colors.danger,
-  },
-  outlineButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.primary,
+  buttonText: {
+    fontSize: typography.fontSizes.medium,
+    fontWeight: "500",
   },
   smallButton: {
     paddingVertical: 8,
@@ -132,23 +131,6 @@ const styles = StyleSheet.create({
   largeButton: {
     paddingVertical: 14,
     paddingHorizontal: 20,
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: typography.fontSizes.medium,
-    fontWeight: "medium",
-  },
-  outlineText: {
-    color: colors.primary,
-    fontSize: typography.fontSizes.medium,
-    fontWeight: "medium",
-  },
-  disabledButton: {
-    backgroundColor: colors.lightGray,
-    borderColor: colors.lightGray
-  },
-  disabledText: {
-    color: colors.gray,
   },
   icon: {
     marginRight: 6,

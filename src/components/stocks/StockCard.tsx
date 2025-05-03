@@ -4,6 +4,7 @@ import { colors, typography, shadows, spacing } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '../../utils/helpers';
 import { usdToInr } from '../../utils/currencyConverter';
+import { darkColors } from '../../theme/darkTheme';
 
 interface StockCardProps {
   stock: {
@@ -25,28 +26,28 @@ const StockCard: React.FC<StockCardProps> = ({ stock, onPress }) => {
   return (
     <TouchableOpacity 
       onPress={onPress} 
-      style={[styles.container, shadows.small]}
+      style={[styles.container, { backgroundColor: darkColors.surface }]}
       activeOpacity={0.7}
     >
       <View style={styles.leftContent}>
-        <Text style={styles.symbol}>{stock.symbol}</Text>
-        {stock.name && <Text style={styles.name} numberOfLines={1}>{stock.name}</Text>}
+        <Text style={[styles.symbol, { color: darkColors.text }]}>{stock.symbol}</Text>
+        {stock.name && <Text style={[styles.name, { color: darkColors.textSecondary }]} numberOfLines={1}>{stock.name}</Text>}
       </View>
       <View style={styles.rightContent}>
-        <Text style={styles.price}>{formatCurrency(inrPrice)}</Text>
+        <Text style={[styles.price, { color: darkColors.text }]}>{formatCurrency(inrPrice)}</Text>
         <View style={[
           styles.changeContainer, 
-          isPositive ? styles.positiveContainer : styles.negativeContainer
+          isPositive ? { backgroundColor: darkColors.profit + '20' } : { backgroundColor: darkColors.loss + '20' }
         ]}>
           <Ionicons 
             name={isPositive ? "caret-up" : "caret-down"} 
             size={12} 
-            color={isPositive ? colors.profit : colors.loss} 
+            color={isPositive ? darkColors.profit : darkColors.loss} 
             style={styles.icon}
           />
           <Text style={[
             styles.change,
-            isPositive ? styles.positive : styles.negative
+            isPositive ? { color: darkColors.profit } : { color: darkColors.loss }
           ]}>
             {Math.abs(stock.change).toFixed(2)} ({Math.abs(stock.changePercent).toFixed(2)}%)
           </Text>
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: spacing.small,
     borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
+    borderLeftColor: darkColors.primary,
   },
   leftContent: {
     flex: 1,

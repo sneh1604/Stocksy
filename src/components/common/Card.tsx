@@ -1,22 +1,15 @@
 import React from 'react';
 import { View, StyleSheet, ViewProps } from 'react-native';
-import { colors, shadows } from '../../theme';
+import { darkColors } from '../../theme/darkTheme';
 
-interface CardProps extends ViewProps {
-  elevation?: 'small' | 'medium' | 'large' | 'none';
-}
-
-const Card: React.FC<CardProps> = ({ 
-  children, 
-  style, 
-  elevation = 'small',
-  ...props 
-}) => {
-  const cardShadow = elevation !== 'none' ? shadows[elevation] : {};
-  
+const Card: React.FC<ViewProps> = ({ children, style, ...props }) => {
   return (
     <View 
-      style={[styles.card, cardShadow, style]} 
+      style={[
+        styles.card,
+        { backgroundColor: darkColors.surface },
+        style
+      ]} 
       {...props}
     >
       {children}
@@ -26,12 +19,14 @@ const Card: React.FC<CardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.border
+    elevation: 2,
+    shadowColor: darkColors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
 

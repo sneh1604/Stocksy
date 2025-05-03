@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import Card from '../components/common/Card';
 import { fetchStockQuote } from '../api/stocksApi';
 import Loading from '../components/common/Loading';
+import { darkColors } from '../theme/darkTheme';
 
 interface PortfolioItem {
   symbol: string;
@@ -62,15 +63,15 @@ const PortfolioScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Portfolio Summary</Text>
-        <Text style={styles.totalValue}>
+    <ScrollView style={[styles.container, { backgroundColor: darkColors.background }]}>
+      <Card style={[styles.summaryCard, { backgroundColor: darkColors.surface }]}>
+        <Text style={[styles.summaryTitle, { color: darkColors.text }]}>Portfolio Summary</Text>
+        <Text style={[styles.totalValue, { color: darkColors.text }]}>
           Total Value: ${totalValue.toLocaleString()}
         </Text>
         <Text style={[
           styles.profitLoss,
-          totalProfitLoss >= 0 ? styles.profit : styles.loss
+          { color: totalProfitLoss >= 0 ? darkColors.profit : darkColors.loss }
         ]}>
           Total P/L: ${totalProfitLoss.toLocaleString()}
         </Text>
@@ -98,7 +99,6 @@ const PortfolioScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   summaryCard: {
     marginTop: 16,

@@ -8,6 +8,7 @@ import { loginUser } from '../../store/actions';
 import { RootState } from '../../store/types';
 import { AnyAction } from 'redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { darkColors } from '../../theme/darkTheme';
 
 const LoginForm = () => {
     const [email, setEmail] = useState('');
@@ -49,29 +50,43 @@ const LoginForm = () => {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Welcome Back</Text>
+        <View style={[styles.container, { backgroundColor: darkColors.background }]}>
+            <Text style={[styles.title, { color: darkColors.text }]}>Welcome Back</Text>
             <TextInput
-                style={styles.input}
+                style={[styles.input, {
+                    backgroundColor: darkColors.surface,
+                    borderColor: darkColors.border,
+                    color: darkColors.text
+                }]}
                 placeholder="Email"
+                placeholderTextColor={darkColors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
             />
             <TextInput
-                style={styles.input}
+                style={[styles.input, {
+                    backgroundColor: darkColors.surface,
+                    borderColor: darkColors.border,
+                    color: darkColors.text
+                }]}
                 placeholder="Password"
+                placeholderTextColor={darkColors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
             />
             <TouchableOpacity 
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={[
+                    styles.button, 
+                    loading && styles.buttonDisabled,
+                    { backgroundColor: loading ? darkColors.disabledButton : darkColors.primary }
+                ]}
                 onPress={handleLogin}
                 disabled={loading}
             >
-                <Text style={styles.buttonText}>
+                <Text style={[styles.buttonText, { color: darkColors.text }]}>
                     {loading ? 'Logging in...' : 'Login'}
                 </Text>
             </TouchableOpacity>
@@ -91,24 +106,18 @@ const styles = StyleSheet.create({
     },
     input: {
         height: 50,
-        borderColor: '#ddd',
         borderWidth: 1,
         marginBottom: 15,
         paddingHorizontal: 15,
         borderRadius: 8,
-        backgroundColor: '#fff',
     },
     button: {
-        backgroundColor: '#007AFF',
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
     },
-    buttonDisabled: {
-        backgroundColor: '#cccccc',
-    },
+    buttonDisabled: {},
     buttonText: {
-        color: '#fff',
         fontSize: 16,
         fontWeight: '600',
     },

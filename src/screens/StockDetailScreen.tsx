@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import StockDetail from '../components/stocks/StockDetail';
 import IndianStockDetail from '../components/indian-market/IndianStockDetail';
 import { RootStackParamList } from '../navigation/types';
+import { darkColors } from '../theme/darkTheme';
 
 type StockDetailsScreenProps = {
   route: RouteProp<RootStackParamList, 'StockDetails'>;
@@ -15,7 +16,7 @@ const StockDetailScreen: React.FC<StockDetailsScreenProps> = ({ route, navigatio
   const { symbol, initialPrice, isIndianStock, companyName } = route.params;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: darkColors.background }]}>
       {isIndianStock ? (
         <IndianStockDetail 
           symbol={symbol}
@@ -38,7 +39,6 @@ const StockDetailScreen: React.FC<StockDetailsScreenProps> = ({ route, navigatio
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
 });
 

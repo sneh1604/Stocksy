@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList } from './types';
@@ -14,9 +14,24 @@ import NewsScreen from '../screens/NewsScreen';
 import IndianMarketScreen from '../screens/IndianMarketScreen';
 
 import { colors } from '../theme';
+import { darkColors } from '../theme/darkTheme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
+
+const darkNavigationTheme = {
+  ...DefaultTheme,
+  dark: true,
+  colors: {
+    ...DefaultTheme.colors,
+    background: darkColors.background,
+    card: darkColors.surface,
+    text: darkColors.text,
+    border: darkColors.border,
+    primary: darkColors.primary,
+    notification: darkColors.primary,
+  },
+};
 
 // Tab navigator for main screens
 const TabNavigator = () => {
@@ -40,14 +55,18 @@ const TabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.gray,
+        tabBarStyle: {
+          backgroundColor: darkColors.surface,
+          borderTopColor: darkColors.border,
+        },
+        tabBarActiveTintColor: darkColors.primary,
+        tabBarInactiveTintColor: darkColors.textSecondary,
         headerShown: true,
         headerStyle: {
-          backgroundColor: colors.white,
+          backgroundColor: darkColors.surface,
+          shadowColor: 'transparent',
         },
-        headerTintColor: colors.dark,
-        headerShadowVisible: false,
+        headerTintColor: darkColors.text,
       })}
     >
       <Tab.Screen 
@@ -91,15 +110,18 @@ const TabNavigator = () => {
 
 const AppNavigator = () => {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={darkNavigationTheme}>
       <Stack.Navigator 
         screenOptions={{
           headerShown: false,
           headerStyle: {
-            backgroundColor: colors.white,
+            backgroundColor: darkColors.surface,
           },
-          headerTintColor: colors.dark,
+          headerTintColor: darkColors.text,
           headerShadowVisible: false,
+          contentStyle: {
+            backgroundColor: darkColors.background,
+          },
         }}
       >
         <Stack.Screen 

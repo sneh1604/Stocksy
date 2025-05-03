@@ -12,6 +12,9 @@ import { syncLocalTransactions } from './src/services/firestore';
 import ErrorBoundary from './src/components/common/ErrorBoundary';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import { ThemeProvider } from './src/theme/ThemeProvider';
+import { StatusBar, StyleSheet, View } from 'react-native';
+import { darkColors } from './src/theme/darkTheme';
 
 export default function App() {
   useEffect(() => {
@@ -85,12 +88,23 @@ export default function App() {
   }, []);
 
   return (
-    <ErrorBoundary>
-      <SafeAreaProvider>
+    <SafeAreaProvider>
+      <StatusBar 
+        barStyle="light-content"
+        backgroundColor={darkColors.background}
+      />
+      <View style={styles.container}>
         <Provider store={store}>
           <AppNavigator />
         </Provider>
-      </SafeAreaProvider>
-    </ErrorBoundary>
+      </View>
+    </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: darkColors.background,
+  },
+});

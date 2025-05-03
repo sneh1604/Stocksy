@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, shadows } from '../../theme';
+import { darkColors } from '../../theme/darkTheme';
 import Card from '../common/Card';
 import { formatCurrency } from '../../utils/helpers';
 
@@ -35,26 +36,29 @@ const PortfolioTransactions: React.FC<PortfolioTransactionsProps> = ({ transacti
     <View style={styles.transactionItem}>
       <View style={styles.transactionHeader}>
         <View style={styles.symbolContainer}>
-          <Text style={styles.symbol}>{item.symbol}</Text>
+          <Text style={[styles.symbol, { color: darkColors.text }]}>{item.symbol}</Text>
           <View style={[
             styles.typeTag,
-            item.type === 'buy' ? styles.buyTag : styles.sellTag
+            item.type === 'buy' ? 
+              { backgroundColor: darkColors.profit + '20' } : 
+              { backgroundColor: darkColors.loss + '20' }
           ]}>
-            <Text style={styles.typeText}>{item.type === 'buy' ? 'BUY' : 'SELL'}</Text>
+            <Text style={[styles.typeText, { color: darkColors.text }]}>{item.type === 'buy' ? 'BUY' : 'SELL'}</Text>
           </View>
         </View>
-        <Text style={styles.date}>
+        <Text style={[styles.date, { color: darkColors.textSecondary }]}>
           {new Date(item.timestamp).toLocaleDateString('en-IN')}
         </Text>
       </View>
       
       <View style={styles.transactionDetails}>
-        <Text style={styles.quantity}>
+        <Text style={[styles.quantity, { color: darkColors.text }]}>
           {item.quantity} shares @ {formatCurrency(item.price)}
         </Text>
         <Text style={[
           styles.total,
-          item.type === 'buy' ? styles.expense : styles.income
+          item.type === 'buy' ? styles.expense : styles.income,
+          { color: item.type === 'buy' ? darkColors.loss : darkColors.profit }
         ]}>
           {item.type === 'buy' ? '-' : '+'}{formatCurrency(item.total)}
         </Text>
@@ -64,16 +68,16 @@ const PortfolioTransactions: React.FC<PortfolioTransactionsProps> = ({ transacti
   
   if (transactions.length === 0) {
     return (
-      <Card style={styles.emptyContainer}>
-        <Ionicons name="receipt-outline" size={48} color={colors.gray} />
-        <Text style={styles.emptyText}>No recent transactions</Text>
+      <Card style={[styles.emptyContainer, { backgroundColor: darkColors.surface }]}>
+        <Ionicons name="receipt-outline" size={48} color={darkColors.textSecondary} />
+        <Text style={[styles.emptyText, { color: darkColors.textSecondary }]}>No recent transactions</Text>
       </Card>
     );
   }
   
   return (
-    <Card>
-      <Text style={styles.title}>Recent Transactions</Text>
+    <Card style={{ backgroundColor: darkColors.surface }}>
+      <Text style={[styles.title, { color: darkColors.text }]}>Recent Transactions</Text>
       <FlatList
         data={recentTransactions}
         renderItem={renderItem}
@@ -90,7 +94,6 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
     marginBottom: spacing.medium,
-    color: colors.dark,
   },
   transactionItem: {
     paddingVertical: spacing.small,
@@ -108,7 +111,6 @@ const styles = StyleSheet.create({
   symbol: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
-    color: colors.dark,
     marginRight: spacing.small,
   },
   typeTag: {
@@ -116,19 +118,12 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-  buyTag: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-  },
-  sellTag: {
-    backgroundColor: 'rgba(244, 67, 54, 0.1)',
-  },
   typeText: {
     fontSize: typography.fontSizes.small,
     fontWeight: typography.fontWeights.medium as '500',
   },
   date: {
     fontSize: typography.fontSizes.small,
-    color: colors.gray,
   },
   transactionDetails: {
     flexDirection: 'row',
@@ -137,21 +132,16 @@ const styles = StyleSheet.create({
   },
   quantity: {
     fontSize: typography.fontSizes.small,
-    color: colors.dark,
   },
   total: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.medium as '500',
   },
-  expense: {
-    color: colors.loss,
-  },
-  income: {
-    color: colors.profit,
-  },
+  expense: {},
+  income: {},
   separator: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: darkColors.border,
     marginVertical: spacing.small,
   },
   emptyContainer: {
@@ -161,7 +151,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.fontSizes.medium,
-    color: colors.gray,
     marginTop: spacing.medium,
   }
 });

@@ -14,6 +14,7 @@ import { fetchMarketNews, NewsItem } from '../api/newsApi';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '../components/common/Card';
 import { colors, typography, spacing } from '../theme';
+import { darkColors } from '../theme/darkTheme';
 
 const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp * 1000);
@@ -61,7 +62,7 @@ const NewsScreen: React.FC = () => {
 
   const renderNewsItem = ({ item }: { item: NewsItem }) => (
     <TouchableOpacity onPress={() => handleOpenArticle(item.url)}>
-      <Card style={styles.newsCard} elevation="medium">
+      <Card style={styles.newsCard}>
         {item.image && (
           <Image
             source={{ uri: item.image }}
@@ -100,7 +101,7 @@ const NewsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: darkColors.background }]}>
       <FlatList
         data={news}
         keyExtractor={(item) => item.id.toString()}
@@ -115,8 +116,8 @@ const NewsScreen: React.FC = () => {
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Market News</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: darkColors.text }]}>Market News</Text>
+            <Text style={[styles.headerSubtitle, { color: darkColors.textSecondary }]}>
               Latest updates from global financial markets
             </Text>
           </View>
@@ -140,7 +141,6 @@ const NewsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   listContent: {
     padding: spacing.base,
@@ -162,17 +162,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.fontSizes.xxlarge,
     fontWeight: typography.fontWeights.bold as 'bold',
-    color: colors.dark,
     marginBottom: spacing.tiny,
   },
   headerSubtitle: {
     fontSize: typography.fontSizes.medium,
-    color: colors.gray,
   },
   newsCard: {
     marginBottom: spacing.base,
     padding: 0,
     overflow: 'hidden',
+    backgroundColor: darkColors.surface,
   },
   newsImage: {
     width: '100%',
@@ -183,7 +182,7 @@ const styles = StyleSheet.create({
   },
   source: {
     fontSize: typography.fontSizes.small,
-    color: colors.primary,
+    color: darkColors.primary,
     fontWeight: typography.fontWeights.medium as '500',
     marginBottom: spacing.small,
   },
@@ -191,11 +190,11 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold as 'bold',
     marginBottom: spacing.small,
-    color: colors.dark,
+    color: darkColors.text,
   },
   summary: {
     fontSize: typography.fontSizes.regular,
-    color: colors.gray,
+    color: darkColors.textSecondary,
     marginBottom: spacing.base,
     lineHeight: 20,
   },

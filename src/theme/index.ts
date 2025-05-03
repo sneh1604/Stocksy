@@ -53,11 +53,11 @@ export const typography = {
 export const spacing = {
   tiny: 4,
   small: 8,
-  medium: 12,
-  base: 16,
-  large: 20,
-  xlarge: 24,
-  xxlarge: 32
+  medium: 16,
+  base: 20,
+  large: 24,
+  xlarge: 32,
+  xxlarge: 40
 };
 
 export const shadows = {

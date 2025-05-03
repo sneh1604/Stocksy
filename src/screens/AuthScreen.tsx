@@ -6,6 +6,7 @@ import SignupForm from '../components/auth/SignupForm';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/types';
 import { useNavigation } from '@react-navigation/native';
+import { darkColors } from '../theme/darkTheme';
 
 const AuthScreen = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -20,15 +21,15 @@ const AuthScreen = () => {
     }, [user, navigation]);
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.formContainer}>
+        <SafeAreaView style={[styles.container, { backgroundColor: darkColors.background }]}>
+            <View style={[styles.formContainer, { backgroundColor: darkColors.background }]}>
                 {isLogin ? <LoginForm /> : <SignupForm />}
                 
                 <TouchableOpacity
                     style={styles.switchButton}
                     onPress={() => setIsLogin(!isLogin)}
                 >
-                    <Text style={styles.switchText}>
+                    <Text style={[styles.switchText, { color: darkColors.primary }]}>
                         {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
                     </Text>
                 </TouchableOpacity>
@@ -40,20 +41,17 @@ const AuthScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
     },
     formContainer: {
         flex: 1,
         justifyContent: 'center',
         paddingHorizontal: 24,
-        backgroundColor: '#f5f5f5',
     },
     switchButton: {
         marginTop: 20,
         alignItems: 'center',
     },
     switchText: {
-        color: '#007AFF',
         fontSize: 16,
     },
 });

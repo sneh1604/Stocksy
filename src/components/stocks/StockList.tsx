@@ -6,6 +6,7 @@ import { fetchStockQuote, searchStocks, fetchDefaultStocks } from '../../api/sto
 import StockCard from './StockCard';
 import Loading from '../common/Loading';
 import { RootStackParamList } from '../../navigation/types';
+import { darkColors } from '../../theme/darkTheme';
 
 interface StockData {
   symbol: string;
@@ -89,7 +90,9 @@ const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
     } else {
       navigation.navigate('StockDetails', { 
         symbol,
-        initialPrice: price 
+        initialPrice: price,
+        isIndianStock: false,
+        companyName: symbol // Using symbol as fallback for company name
       });
     }
   };
@@ -129,10 +132,15 @@ const StockList: React.FC<StockListProps> = ({ onStockPress }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: darkColors.background }]}>
       <TextInput
-        style={styles.searchInput}
+        style={[styles.searchInput, {
+          borderColor: darkColors.border,
+          backgroundColor: darkColors.surface,
+          color: darkColors.text,
+        }]}
         placeholder="Search stocks..."
+        placeholderTextColor={darkColors.textSecondary}
         value={searchQuery}
         onChangeText={handleSearch}
       />
@@ -158,7 +166,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     height: 40,
-    borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 16,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
+import { darkColors } from '../../theme/darkTheme';
 
 const SignupForm = () => {
     const [email, setEmail] = useState('');
@@ -43,36 +44,55 @@ const SignupForm = () => {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Create Account</Text>
+        <View style={[styles.container, { backgroundColor: darkColors.background }]}>
+            <Text style={[styles.title, { color: darkColors.text }]}>Create Account</Text>
             <TextInput
-                style={styles.input}
+                style={[styles.input, {
+                    backgroundColor: darkColors.surface,
+                    borderColor: darkColors.border,
+                    color: darkColors.text
+                }]}
                 placeholder="Email"
+                placeholderTextColor={darkColors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
             />
             <TextInput
-                style={styles.input}
+                style={[styles.input, {
+                    backgroundColor: darkColors.surface,
+                    borderColor: darkColors.border,
+                    color: darkColors.text
+                }]}
                 placeholder="Password"
+                placeholderTextColor={darkColors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
             />
             <TextInput
-                style={styles.input}
+                style={[styles.input, {
+                    backgroundColor: darkColors.surface,
+                    borderColor: darkColors.border,
+                    color: darkColors.text
+                }]}
                 placeholder="Confirm Password"
+                placeholderTextColor={darkColors.textSecondary}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
             />
             <TouchableOpacity 
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={[
+                    styles.button, 
+                    loading && styles.buttonDisabled,
+                    { backgroundColor: loading ? darkColors.disabledButton : darkColors.primary }
+                ]}
                 onPress={handleSignup}
                 disabled={loading}
             >
-                <Text style={styles.buttonText}>
+                <Text style={[styles.buttonText, { color: darkColors.text }]}>
                     {loading ? 'Creating Account...' : 'Sign Up'}
                 </Text>
             </TouchableOpacity>

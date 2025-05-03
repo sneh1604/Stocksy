@@ -9,6 +9,7 @@ import { saveTransaction } from '../../services/firestore';
 import { colors, typography, spacing, shadows } from '../../theme';
 import { formatCurrency } from '../../utils/helpers';
 import Card from '../common/Card';
+import { darkColors } from '../../theme/darkTheme';
 
 interface QuickTradeProps {
   symbol: string;
@@ -56,6 +57,7 @@ const QuickTrade: React.FC<QuickTradeProps> = ({ symbol, price, currentShares = 
         await saveTransaction({
           userId,
           symbol,
+          companyName: symbol, // Using symbol as fallback for company name
           type: 'buy',
           shares,
           price,
@@ -75,10 +77,10 @@ const QuickTrade: React.FC<QuickTradeProps> = ({ symbol, price, currentShares = 
       }
       
       try {
-        dispatch(sellStock(symbol, shares, price));
         await saveTransaction({
           userId,
           symbol,
+          companyName: symbol, // Using symbol as fallback for company name
           type: 'sell',
           shares,
           price,
@@ -97,12 +99,12 @@ const QuickTrade: React.FC<QuickTradeProps> = ({ symbol, price, currentShares = 
   const estimatedTotal = quantity ? parseInt(quantity) * price : 0;
 
   return (
-    <Card style={styles.container}>
-      <Text style={styles.title}>Quick Trade - {symbol}</Text>
+    <Card style={[styles.container, { backgroundColor: darkColors.surface }]}>
+      <Text style={[styles.title, { color: darkColors.text }]}>Quick Trade - {symbol}</Text>
       
       <View style={styles.priceRow}>
-        <Text style={styles.priceLabel}>Current Price:</Text>
-        <Text style={styles.priceValue}>{formatCurrency(price)}</Text>
+        <Text style={[styles.priceLabel, { color: darkColors.textSecondary }]}>Current Price:</Text>
+        <Text style={[styles.priceValue, { color: darkColors.text }]}>{formatCurrency(price)}</Text>
       </View>
       
       <View style={styles.typeSelector}>
@@ -137,20 +139,21 @@ const QuickTrade: React.FC<QuickTradeProps> = ({ symbol, price, currentShares = 
       </View>
       
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Quantity:</Text>
+        <Text style={[styles.inputLabel, { color: darkColors.textSecondary }]}>Quantity:</Text>
         <TextInput
           style={styles.input}
           value={quantity}
           onChangeText={handleQuantityChange}
           keyboardType="numeric"
           placeholder="Enter shares"
+          placeholderTextColor={darkColors.textSecondary}
         />
       </View>
       
       {quantity && (
         <View style={styles.estimateContainer}>
-          <Text style={styles.estimateLabel}>Estimated {tradeType === 'buy' ? 'Cost' : 'Value'}:</Text>
-          <Text style={styles.estimateValue}>{formatCurrency(estimatedTotal)}</Text>
+          <Text style={[styles.estimateLabel, { color: darkColors.textSecondary }]}>Estimated {tradeType === 'buy' ? 'Cost' : 'Value'}:</Text>
+          <Text style={[styles.estimateValue, { color: darkColors.text }]}>{formatCurrency(estimatedTotal)}</Text>
         </View>
       )}
       
@@ -169,11 +172,11 @@ const QuickTrade: React.FC<QuickTradeProps> = ({ symbol, price, currentShares = 
       </TouchableOpacity>
       
       {tradeType === 'buy' && (
-        <Text style={styles.balanceText}>Available: {formatCurrency(balance)}</Text>
+        <Text style={[styles.balanceText, { color: darkColors.textSecondary }]}>Available: {formatCurrency(balance)}</Text>
       )}
       
       {tradeType === 'sell' && (
-        <Text style={styles.balanceText}>Available: {currentShares} shares</Text>
+        <Text style={[styles.balanceText, { color: darkColors.textSecondary }]}>Available: {currentShares} shares</Text>
       )}
     </Card>
   );
@@ -187,7 +190,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
-    color: colors.dark,
     marginBottom: spacing.medium,
   },
   priceRow: {
@@ -198,12 +200,10 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: typography.fontSizes.medium,
-    color: colors.gray,
   },
   priceValue: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
-    color: colors.dark,
   },
   typeSelector: {
     flexDirection: 'row',
@@ -213,12 +213,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.small,
     alignItems: 'center',
-    backgroundColor: colors.light,
     marginHorizontal: spacing.tiny,
     borderRadius: 6,
+    backgroundColor: darkColors.card,
   },
   activeTypeButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: darkColors.primary,
   },
   disabledButton: {
     backgroundColor: colors.lightGray,
@@ -239,16 +239,17 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: typography.fontSizes.small,
-    color: colors.gray,
     marginBottom: spacing.tiny,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 6,
     paddingHorizontal: spacing.medium,
     paddingVertical: spacing.small,
     fontSize: typography.fontSizes.medium,
+    borderColor: darkColors.border,
+    backgroundColor: darkColors.background,
+    color: darkColors.text,
   },
   estimateContainer: {
     flexDirection: 'row',
@@ -257,12 +258,10 @@ const styles = StyleSheet.create({
   },
   estimateLabel: {
     fontSize: typography.fontSizes.medium,
-    color: colors.gray,
   },
   estimateValue: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
-    color: colors.dark,
   },
   tradeButton: {
     paddingVertical: spacing.medium,
@@ -286,7 +285,6 @@ const styles = StyleSheet.create({
   },
   balanceText: {
     fontSize: typography.fontSizes.small,
-    color: colors.gray,
     textAlign: 'center',
   },
 });

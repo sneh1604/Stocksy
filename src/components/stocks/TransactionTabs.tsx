@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import { colors, typography, spacing, shadows } from '../../theme';
+import { colors, typography, shadows } from '../../theme';
+import { darkColors } from '../../theme/darkTheme';
 import Card from '../common/Card';
 import { formatCurrency } from '../../utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
@@ -61,7 +62,7 @@ const TransactionTabs: React.FC<TransactionTabsProps> = ({ transactions }) => {
   );
   
   return (
-    <Card style={styles.container}>
+    <Card style={[styles.container, { backgroundColor: darkColors.surface }]}>
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'all' && styles.activeTab]}
@@ -101,7 +102,7 @@ const TransactionTabs: React.FC<TransactionTabsProps> = ({ transactions }) => {
         />
       ) : (
         <View style={styles.emptyState}>
-          <Ionicons name="receipt-outline" size={32} color={colors.gray} />
+          <Ionicons name="receipt-outline" size={32} color={darkColors.textSecondary} />
           <Text style={styles.emptyText}>No transactions yet</Text>
         </View>
       )}
@@ -111,70 +112,73 @@ const TransactionTabs: React.FC<TransactionTabsProps> = ({ transactions }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: spacing.medium,
+    marginVertical: 16,
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: colors.light,
+    backgroundColor: darkColors.card,
     borderRadius: 8,
-    marginBottom: spacing.medium,
+    marginBottom: 16,
     padding: 4,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: spacing.small,
+    paddingVertical: 8,
     borderRadius: 6,
   },
   activeTab: {
-    backgroundColor: colors.white,
-    ...shadows.small,
+    backgroundColor: darkColors.primary,
   },
   tabText: {
     fontSize: typography.fontSizes.small,
-    color: colors.gray,
+    color: darkColors.textSecondary,
   },
   activeTabText: {
-    color: colors.primary,
+    color: darkColors.text,
     fontWeight: typography.fontWeights.bold as 'bold',
   },
   transactionItem: {
-    paddingVertical: spacing.small,
+    paddingVertical: 8,
   },
   transactionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.tiny,
+    marginBottom: 4,
   },
   symbol: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold as 'bold',
-    marginRight: spacing.small,
+    marginRight: 8,
+    color: darkColors.text,
   },
   badge: {
-    paddingHorizontal: spacing.small,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
   },
   buyBadge: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    backgroundColor: darkColors.profit + '20',
   },
   sellBadge: {
-    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+    backgroundColor: darkColors.loss + '20',
   },
   badgeText: {
     fontSize: typography.fontSizes.tiny,
     fontWeight: typography.fontWeights.bold as 'bold',
+    color: darkColors.text,
   },
   transactionDetails: {
-    marginBottom: spacing.tiny,
+    marginBottom: 4,
   },
   shares: {
     fontSize: typography.fontSizes.small,
+    color: darkColors.text,
   },
   total: {
     fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.medium as '500',
+    color: darkColors.text,
   },
   transactionFooter: {
     flexDirection: 'row',
@@ -183,32 +187,32 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: typography.fontSizes.tiny,
-    color: colors.gray,
+    color: darkColors.textSecondary,
   },
   syncPendingBadge: {
-    backgroundColor: colors.warning,
-    paddingHorizontal: spacing.small,
+    backgroundColor: darkColors.primaryVariant,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
   },
   syncPendingText: {
     fontSize: typography.fontSizes.tiny,
-    color: colors.white,
+    color: darkColors.text,
     fontWeight: typography.fontWeights.bold as 'bold',
   },
   separator: {
     height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.small,
+    backgroundColor: darkColors.border,
+    marginVertical: 8,
   },
   emptyState: {
     alignItems: 'center',
-    padding: spacing.large,
+    padding: 24,
   },
   emptyText: {
     fontSize: typography.fontSizes.medium,
-    color: colors.gray,
-    marginTop: spacing.small,
+    color: darkColors.textSecondary,
+    marginTop: 8,
   },
 });
 

@@ -5,6 +5,7 @@ import { RootState } from '../store/types';
 import { getUserTransactions } from '../services/firestore';
 import Card from '../components/common/Card';
 import { formatCurrency } from '../utils/helpers';
+import { darkColors } from '../theme/darkTheme';
 
 interface Transaction {
   id: string;
@@ -41,39 +42,45 @@ const TransactionHistoryScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={[styles.loadingContainer, { backgroundColor: darkColors.background }]}>
+        <ActivityIndicator size="large" color={darkColors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Transaction History</Text>
+    <View style={[styles.container, { backgroundColor: darkColors.background }]}>
+      <Text style={[styles.title, { color: darkColors.text }]}>Transaction History</Text>
       
       {transactions.length === 0 ? (
-        <Text style={styles.noTransactions}>No transactions yet</Text>
+        <Text style={[styles.noTransactions, { color: darkColors.textSecondary }]}>
+          No transactions yet
+        </Text>
       ) : (
         <FlatList
           data={transactions}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <Card style={styles.card}>
+            <Card style={[styles.card, { backgroundColor: darkColors.surface }]}>
               <View style={styles.header}>
-                <Text style={styles.symbol}>{item.symbol}</Text>
+                <Text style={[styles.symbol, { color: darkColors.text }]}>{item.symbol}</Text>
                 <Text style={[
                   styles.type,
-                  item.type === 'buy' ? styles.buyText : styles.sellText
+                  item.type === 'buy' ? 
+                    [styles.buyText, { backgroundColor: darkColors.profit + '20', color: darkColors.profit }] : 
+                    [styles.sellText, { backgroundColor: darkColors.loss + '20', color: darkColors.loss }]
                 ]}>
                   {item.type.toUpperCase()}
                 </Text>
               </View>
               
-              <View style={styles.details}>
-                <Text>Shares: {item.shares}</Text>
-                <Text>Price: {formatCurrency(item.price)}</Text>
-                <Text style={styles.total}>Total: {formatCurrency(item.total)}</Text>
-                <Text style={styles.date}>
+              <View style={[styles.details, { borderTopColor: darkColors.border }]}>
+                <Text style={{ color: darkColors.text }}>Shares: {item.shares}</Text>
+                <Text style={{ color: darkColors.text }}>Price: {formatCurrency(item.price)}</Text>
+                <Text style={[styles.total, { color: darkColors.text }]}>
+                  Total: {formatCurrency(item.total)}
+                </Text>
+                <Text style={[styles.date, { color: darkColors.textSecondary }]}>
                   {new Date(item.timestamp).toLocaleString()}
                 </Text>
               </View>
@@ -89,7 +96,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -105,7 +111,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
     fontSize: 16,
-    color: '#666',
   },
   card: {
     marginBottom: 12,
@@ -127,17 +132,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
   },
-  buyText: {
-    backgroundColor: '#e6f7ed',
-    color: '#4CAF50',
-  },
-  sellText: {
-    backgroundColor: '#ffebee',
-    color: '#F44336',
-  },
+  buyText: {},
+  sellText: {},
   details: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
     paddingTop: 12,
   },
   total: {
@@ -145,7 +143,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   date: {
-    color: '#666',
     fontSize: 12,
     marginTop: 8,
     textAlign: 'right',
