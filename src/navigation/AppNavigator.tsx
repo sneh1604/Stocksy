@@ -11,6 +11,7 @@ import { SearchStockScreen } from '../screens/SearchStockScreen';
 import AuthScreen from '../screens/AuthScreen';
 import TransactionHistoryScreen from '../screens/TransactionHistoryScreen';
 import NewsScreen from '../screens/NewsScreen';
+import IndianMarketScreen from '../screens/IndianMarketScreen';
 
 import { colors } from '../theme';
 
@@ -33,6 +34,8 @@ const TabNavigator = () => {
             iconName = focused ? 'newspaper' : 'newspaper-outline';
           } else if (route.name === 'TransactionHistory') {
             iconName = focused ? 'list' : 'list-outline';
+          } else if (route.name === 'IndianMarket') {
+            iconName = focused ? 'business' : 'business-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -59,6 +62,13 @@ const TabNavigator = () => {
         component={SearchStockScreen}
         options={{
           title: 'Search'
+        }}
+      />
+      <Tab.Screen 
+        name="IndianMarket" 
+        component={IndianMarketScreen}
+        options={{
+          title: 'Indian Market'
         }}
       />
       <Tab.Screen 
@@ -115,6 +125,14 @@ const AppNavigator = () => {
             title: 'Login / Sign Up',
             // This will prevent going back to the home screen
             headerBackVisible: false
+          }}
+        />
+        <Stack.Screen 
+          name="IndianMarket" 
+          component={IndianMarketScreen}
+          options={{
+            title: 'Indian Market',
+            headerShown: true,
           }}
         />
       </Stack.Navigator>

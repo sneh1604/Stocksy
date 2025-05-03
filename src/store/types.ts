@@ -28,14 +28,23 @@ export enum AuthActionTypes {
     balance: number;
   }
 
-  export interface RootState {
-    auth: {
-        user: {
-            uid: string | null;
-            email: string | null;
-            displayName: string | null;
-        } | null;
+export interface PortfolioState {
+  balance: number;
+  holdings: {
+    [key: string]: {
+      shares: number;
+      averagePrice: number;
     };
+  };
+}
+
+export interface RootState {
+  auth: {
+    error: any;
+    user: any;
+    loading: boolean;
+  };
+  portfolio: PortfolioState;
 }
 
 export interface StockTransaction {

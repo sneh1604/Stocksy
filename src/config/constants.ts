@@ -18,3 +18,11 @@ export const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 export const FINNHUB_FALLBACK_API_KEY = 'sandbox_cg2e85qad3iaij1tvaig'; // Sandbox API key
 
 export const DEFAULT_STOCKS = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'META'];
+
+export const INDIAN_STOCK_API_KEY = 'sk-live-q68c6TzuJtAuMbtSYL6ykLvXcYyBK2YoCt5qDefy';
+export const INDIAN_STOCK_API_BASE_URL = 'https://stock.indianapi.in'; // Removed /api/v1
+
+// Add some default Indian stocks
+export const DEFAULT_INDIAN_STOCKS = [
+  'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK'
+];

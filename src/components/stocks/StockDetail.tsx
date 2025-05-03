@@ -17,7 +17,8 @@ import { usdToInr } from '../../utils/currencyConverter';
 
 interface StockDetailProps {
   symbol: string;
-  initialPrice?: number;
+  initialPrice: number;
+  companyName?: string;  // Make it optional for backward compatibility
   onClose?: () => void;
 }
 
@@ -37,7 +38,12 @@ interface StockDetailState {
   error: string | null;
 }
 
-const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose }) => {
+const StockDetail: React.FC<StockDetailProps> = ({ 
+  symbol, 
+  initialPrice, 
+  companyName,
+  onClose 
+}) => {
   const [state, setState] = useState<StockDetailState>({
     stockData: initialPrice ? {
       symbol,
@@ -219,6 +225,7 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
                   await saveTransaction({
                     userId,
                     symbol,
+                    companyName: companyName || symbol, // Use symbol as fallback
                     type: 'buy',
                     shares,
                     price: currentPrice,
@@ -281,6 +288,7 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
                   await saveTransaction({
                     userId,
                     symbol,
+                    companyName: companyName || symbol, // Use symbol as fallback
                     type: 'sell',
                     shares,
                     price: currentPrice,
@@ -424,6 +432,7 @@ const StockDetail: React.FC<StockDetailProps> = ({ symbol, initialPrice, onClose
       <Card style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.symbol}>{symbol}</Text>
+          {companyName && <Text style={styles.companyName}>{companyName}</Text>}
           {onClose && (
             <TouchableOpacity onPress={onClose}>
               <Text style={styles.closeButton}>✕</Text>
@@ -616,6 +625,11 @@ const styles = StyleSheet.create({
   symbol: {
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  companyName: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 4,
   },
   closeButton: {
     fontSize: 24,

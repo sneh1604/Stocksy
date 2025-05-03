@@ -46,59 +46,72 @@ const saveLocalTransactionsToCache = async () => {
   }
 };
 
-export const saveTransaction = async (transaction: {
+interface Transaction {
   userId: string;
   symbol: string;
+  companyName: string;
   type: 'buy' | 'sell';
   shares: number;
   price: number;
   total: number;
   timestamp: Date;
-}) => {
-  if (!transaction.userId) {
-    throw new Error('User ID is required');
-  }
+}
 
+export const saveTransaction = async (transaction: Transaction) => {
   try {
-    // First try to save to Firestore
-    const docRef = await addDoc(collection(db, 'transactions'), {
-      ...transaction,
-      timestamp: transaction.timestamp.toISOString(),
-      createdAt: serverTimestamp()
-    });
-    
-    console.log('[Firestore] Transaction saved:', docRef.id);
-    
-    // If successful, also update portfolio
-    await updatePortfolioWithTransaction(transaction);
-    
-    return docRef.id;
-  } catch (error) {
-    console.error('[Firestore] Error saving transaction:', error);
-    
-    // Store transaction locally as fallback
-    const localTransaction = {
-      id: `local_${Date.now()}`,
-      ...transaction,
-      timestamp: transaction.timestamp.toISOString(),
-      createdAt: new Date().toISOString(),
-      savedLocally: true,
-      syncPending: true
-    };
-    
-    // Save to local cache
-    localTransactions.push(localTransaction);
-    await saveLocalTransactionsToCache();
-    
-    // Still update portfolio locally
-    try {
-      await updatePortfolioWithTransaction(transaction);
-    } catch (portfolioError) {
-      console.error('[Local] Error updating portfolio:', portfolioError);
+    // Validate required fields
+    if (!transaction.companyName) {
+      transaction.companyName = transaction.symbol;
     }
-    
-    console.log('[Local] Transaction saved locally:', localTransaction.id);
-    return localTransaction.id;
+
+    if (!transaction.userId) {
+      throw new Error('User ID is required');
+    }
+
+    try {
+      // First try to save to Firestore
+      const docRef = await addDoc(collection(db, 'transactions'), {
+        ...transaction,
+        timestamp: transaction.timestamp.toISOString(),
+        createdAt: serverTimestamp()
+      });
+      
+      console.log('[Firestore] Transaction saved:', docRef.id);
+      
+      // If successful, also update portfolio
+      await updatePortfolioWithTransaction(transaction);
+      
+      return docRef.id;
+    } catch (error) {
+      console.error('[Firestore] Error saving transaction:', error);
+      
+      // Store transaction locally as fallback
+      const localTransaction = {
+        id: `local_${Date.now()}`,
+        ...transaction,
+        timestamp: transaction.timestamp.toISOString(),
+        createdAt: new Date().toISOString(),
+        savedLocally: true,
+        syncPending: true
+      };
+      
+      // Save to local cache
+      localTransactions.push(localTransaction);
+      await saveLocalTransactionsToCache();
+      
+      // Still update portfolio locally
+      try {
+        await updatePortfolioWithTransaction(transaction);
+      } catch (portfolioError) {
+        console.error('[Local] Error updating portfolio:', portfolioError);
+      }
+      
+      console.log('[Local] Transaction saved locally:', localTransaction.id);
+      return localTransaction.id;
+    }
+  } catch (error) {
+    console.error('[Transaction] Error:', error);
+    throw error;
   }
 };
 
