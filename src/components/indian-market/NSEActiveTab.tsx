@@ -74,7 +74,7 @@ const NSEActiveTab = () => {
   if (error) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: darkColors.background }]}>
-        <Ionicons name="alert-circle-outline" size={48} color={darkColors.danger} />
+        <Ionicons name="alert-circle-outline" size={48} color={darkColors.loss} />
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchNSEStocks}>
           <Text style={styles.retryText}>Retry</Text>
@@ -94,7 +94,7 @@ const NSEActiveTab = () => {
               <View style={styles.cardHeader}>
                 <View>
                   <Text style={[styles.companyName, { color: darkColors.text }]}>{item.company}</Text>
-                  <Text style={[styles.symbol, { color: darkColors.subtext }]}>{item.ticker}</Text>
+                  <Text style={[styles.symbol, { color: darkColors.textSecondary }]}>{item.ticker}</Text>
                 </View>
                 <View style={styles.priceContainer}>
                   <Text style={[styles.price, { color: darkColors.text }]}>
@@ -120,7 +120,7 @@ const NSEActiveTab = () => {
                       {item.net_change.toFixed(2)} ({item.percent_change.toFixed(2)}%)
                     </Text>
                   </View>
-                  <Text style={[styles.volume, { color: darkColors.subtext }]}>
+                  <Text style={[styles.volume, { color: darkColors.textSecondary }]}>
                     Vol: {parseInt(String(item.volume)).toLocaleString()}
                   </Text>
                 </View>
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: spacing.medium,
     fontSize: typography.fontSizes.medium,
-    color: darkColors.danger,
+    color: darkColors.loss,
     textAlign: 'center',
   },
   retryButton: {

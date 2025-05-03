@@ -38,7 +38,12 @@ const TrendingStocksTab = () => {
   };
 
   const handleStockPress = (symbol: string, price: number) => {
-    navigation.navigate('StockDetails', { symbol, initialPrice: price });
+    navigation.navigate('StockDetails', {
+      symbol,
+      initialPrice: price,
+      isIndianStock: true,
+      companyName: stocks.find(s => s.symbol === symbol)?.companyName || ''
+    });
   };
 
   if (loading) return <Loading />;

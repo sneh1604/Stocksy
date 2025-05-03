@@ -134,8 +134,8 @@ const IndianNewsTab = () => {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color={darkColors.danger} />
-        <Text style={[styles.errorText, { color: darkColors.danger }]}>{error}</Text>
+        <Ionicons name="alert-circle-outline" size={48} color={darkColors.loss} />
+        <Text style={[styles.errorText, { color: darkColors.loss }]}>{error}</Text>
         <TouchableOpacity style={[styles.retryButton, { backgroundColor: darkColors.primary }]} onPress={fetchNews}>
           <Text style={[styles.retryText, { color: darkColors.text }]}>
             Retry
