@@ -25,10 +25,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "package": "com.sneh140.stocksyapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "77f6f352-b2e0-4ac2-8bf4-d793899f3aa2"
+      }
     }
   }
 }
