@@ -1,7 +1,7 @@
-# Stock Simulator App
+# Stocksy
 
 ## Overview
-The Stock Simulator App is a React Native Expo-based platform designed to simulate real-world stock trading with virtual money, allowing users to practice investing without financial risk.
+Stocksy is a React Native Expo-based platform designed to simulate real-world stock trading with virtual money, allowing users to practice investing without financial risk.
 
 ## Features
 - **Authentication**: User authentication using Firebase.

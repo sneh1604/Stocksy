@@ -11,7 +11,7 @@ export const MOCK_STOCK_DATA = {
 
 // If you're getting API errors, replace this with a valid Finnhub API key
 // Free keys are available at https://finnhub.io/register
-export const FINNHUB_API_KEY = 'ctlrbqhr01qv7qq356pgctlrbqhr01qv7qq356q0'; // Replace with your API key
+export const FINNHUB_API_KEY = 'd0au8v1r01qlq65pp5ogd0au8v1r01qlq65pp5p0'; // Replace with your API key
 export const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 
 // A fallback API key if above key doesn't work

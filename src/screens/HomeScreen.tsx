@@ -123,7 +123,7 @@ const HomeScreen = () => {
         return (
             <View style={[styles.authPrompt, { backgroundColor: darkColors.background }]}>
                 <Ionicons name="bar-chart" size={80} color={darkColors.primary} style={styles.appIcon} />
-                <Text style={[styles.appTitle, { color: darkColors.text }]}>Stock Simulator</Text>
+                <Text style={[styles.appTitle, { color: darkColors.text }]}>Stocksy</Text>
                 <Text style={[styles.authText, { color: darkColors.textSecondary }]}>
                     Practice investing with virtual money and learn to trade stocks risk-free
                 </Text>
