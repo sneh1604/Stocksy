@@ -1,14 +1,9 @@
-<<<<<<< HEAD
-# Stocksy
 
-## Overview
-Stocksy is a React Native Expo-based platform designed to simulate real-world stock trading with virtual money, allowing users to practice investing without financial risk.
-=======
 # Stocksy - Virtual Stock Trading Simulator
 
 ## Overview
 Stocksy is a comprehensive stock trading simulator built with React Native that allows users to practice trading stocks risk-free using virtual currency. The app supports both international stocks and Indian market trading (BSE/NSE), providing a realistic trading experience with real-time market data.
->>>>>>> ed234d2910b3165ae441ade71646f43b440e374f
+
 
 ## Key Features
 
